@@ -1,6 +1,7 @@
-use crate::{state::Config};
+use crate::state::{Config, LoanAccount};
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
@@ -26,7 +27,9 @@ pub struct InitializeConfig<'info> {
 pub struct CreateLoanRequest<'info> {
     #[account(mut)]
     pub borrower: Signer<'info>,
+
     pub config: Account<'info, Config>,
+
     #[account(
         init,
         payer = borrower,
@@ -36,29 +39,21 @@ pub struct CreateLoanRequest<'info> {
     )]
     pub loan: Account<'info, LoanAccount>,
 
-    // The PDA authority for loan & escrows (derived from same seeds as loan)
-    /// CHECK: derived PDA used as token authority
-    #[account(
-        seeds = [b"loan", borrower.key().as_ref(), &loan_id.to_le_bytes()],
-        bump = loan.bump
-    )]
-    pub loan_signer: UncheckedAccount<'info>,
-
     pub usdc_mint: Account<'info, Mint>,
 
-    // Create both escrow ATAs for USDC owned by loan_signer
     #[account(
         init_if_needed,
         payer = borrower,
         associated_token::mint = usdc_mint,
-        associated_token::authority = loan_signer
+        associated_token::authority = loan
     )]
     pub loan_escrow_ata: Account<'info, TokenAccount>,
+
     #[account(
         init_if_needed,
         payer = borrower,
         associated_token::mint = usdc_mint,
-        associated_token::authority = loan_signer
+        associated_token::authority = loan
     )]
     pub collateral_escrow_ata: Account<'info, TokenAccount>,
 

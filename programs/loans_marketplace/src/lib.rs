@@ -1,18 +1,20 @@
-use anchor_lang::prelude::*;
-
-pub mod context;
+pub mod contexts;
 pub mod error;
 pub mod state;
+
+use crate::contexts::{
+    CreateLoanRequest, InitializeConfig, __client_accounts_create_loan_request,
+    __client_accounts_initialize_config,
+};
+use crate::error::LoanMarketplaceErrorCode;
+use crate::state::{LoanCreated, LoanState};
+use anchor_lang::prelude::*;
 
 declare_id!("BTH9yYvKRBZHXJAPuv724mCMiDcjcnCqef7rDdSZUJWf");
 
 #[program]
 pub mod loans_marketplace {
     use super::*;
-
-    use crate::context::InitializeConfig;
-    use crate::error::LoanMarketplaceErrorCode;
-    use crate::state::{LoanCreated, LoanState};
 
     pub fn initialize_config(ctx: Context<InitializeConfig>, fee_bps: u16) -> Result<()> {
         require!(fee_bps <= 1_000, LoanMarketplaceErrorCode::InvalidParam); // cap at 10%
@@ -36,14 +38,21 @@ pub mod loans_marketplace {
         funding_deadline: i64,
     ) -> Result<()> {
         require!(amount > 0, LoanMarketplaceErrorCode::InvalidParam);
-        require!(term_secs >= 86_400, LoanMarketplaceErrorCode::InvalidParam); // >= 1 day
-        require!(max_apr_bps > 0, LoanMarketplaceErrorCode::InvalidParam); // (APR in basis points; 100 bps = 1%)
-        require!(min_collateral_bps <= 10_000, LoanMarketplaceErrorCode::InvalidParam); // (≤ 100% collateral; 0 allowed for unsecured)
+        require!(term_secs >= 86_400, LoanMarketplaceErrorCode::InvalidParam);
+        require!(max_apr_bps > 0, LoanMarketplaceErrorCode::InvalidParam);
+        require!(
+            min_collateral_bps <= 10_000,
+            LoanMarketplaceErrorCode::InvalidParam
+        );
+
         let now = Clock::get()?.unix_timestamp;
-        require!(funding_deadline > now, LoanMarketplaceErrorCode::InvalidParam); // (the listing must fund in the future)
+        require!(
+            funding_deadline > now,
+            LoanMarketplaceErrorCode::InvalidParam
+        );
 
         let loan = &mut ctx.accounts.loan;
-        loan.bump = *ctx.bumps.get("loan").unwrap();
+        loan.bump = ctx.bumps.loan;
         loan.borrower = ctx.accounts.borrower.key();
         loan.loan_id = loan_id;
         loan.amount = amount;
@@ -55,15 +64,12 @@ pub mod loans_marketplace {
 
         loan.funded_amount = 0;
         loan.collateral_amount = 0;
-
-        loan.actual_apr_bps = max_apr_bps; // MVP fixed-rate at borrower's max (100 basis points(bps) equal 1%)
+        loan.actual_apr_bps = max_apr_bps;
         loan.start_ts = 0;
         loan.due_ts = 0;
-
         loan.last_accrual_ts = 0;
         loan.accrued_interest = 0;
         loan.outstanding_principal = amount;
-
         loan.total_repaid_principal = 0;
         loan.total_repaid_interest = 0;
 
@@ -76,6 +82,7 @@ pub mod loans_marketplace {
             min_collateral_bps,
             funding_deadline
         });
+
         Ok(())
     }
 }
