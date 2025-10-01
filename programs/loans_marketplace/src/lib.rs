@@ -42,4 +42,12 @@ pub mod loans_marketplace {
             loan_bump,
         )
     }
+
+    pub fn finalize_funding(ctx: Context<FinalizeFunding>) -> Result<()> {
+        ctx.accounts.finalize_funding()
+    }
+
+    pub fn drawdown(ctx: Context<Drawdown>) -> Result<()> {
+        ctx.accounts.drawdown()
+    }
 }

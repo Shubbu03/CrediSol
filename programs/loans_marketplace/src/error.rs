@@ -25,4 +25,7 @@ pub enum LoanMarketplaceErrorCode {
 
     #[msg("Invalid account")]
     InvalidAccount,
+
+    #[msg("Insufficient funding")]
+    InsufficientFunding,
 }
