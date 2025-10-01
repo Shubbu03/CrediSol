@@ -1,3 +1,4 @@
+#![allow(unexpected_cfgs, deprecated)]
 pub mod contexts;
 pub mod error;
 pub mod state;
