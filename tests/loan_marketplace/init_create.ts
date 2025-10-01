@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
-import { PublicKey, LAMPORTS_PER_SOL, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { getAssociatedTokenAddress, createMint, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { getAssociatedTokenAddress, createMint } from "@solana/spl-token";
 import { expect } from "chai";
 import { LoansMarketplace } from "../../target/types/loans_marketplace";
 
@@ -30,7 +30,7 @@ describe("loans_marketplace — initialize_config + create_loan_request", () => 
 
         await program.methods
             .initializeConfig(500)
-            .accounts({
+            .accountsPartial({
                 admin: provider.wallet.publicKey,
                 usdcMint
             })
@@ -70,7 +70,7 @@ describe("loans_marketplace — initialize_config + create_loan_request", () => 
                 minCollateralBps,
                 fundingDeadline
             )
-            .accounts({
+            .accountsPartial({
                 borrower: borrower.publicKey,
                 config: configPda,
                 usdcMint
@@ -115,7 +115,7 @@ describe("loans_marketplace — initialize_config + create_loan_request", () => 
                     0,
                     new BN(now() - 10)
                 )
-                .accounts({
+                .accountsPartial({
                     borrower: borrower.publicKey,
                     config: configPda,
                     usdcMint,
