@@ -50,4 +50,8 @@ pub mod loans_marketplace {
     pub fn drawdown(ctx: Context<Drawdown>) -> Result<()> {
         ctx.accounts.drawdown()
     }
+
+    pub fn payout_to_lenders(ctx: Context<PayoutLenders>) -> Result<()> {
+        ctx.accounts.payout()
+    }
 }

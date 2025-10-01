@@ -28,4 +28,7 @@ pub enum LoanMarketplaceErrorCode {
 
     #[msg("Insufficient funding")]
     InsufficientFunding,
+
+    #[msg("Already claimed")]
+    AlreadyClaimed,
 }
