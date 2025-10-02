@@ -6,7 +6,6 @@ pub mod lender_fund;
 pub mod mark_default;
 pub mod payout_to_lenders;
 pub mod repay_loan;
-pub mod payout_to_lenders;
 pub mod set_loan_for_default_testing;
 
 pub use create_loan::*;
