@@ -25,4 +25,12 @@ impl<'info> SetLoanForDefaultTesting<'info> {
 
         Ok(())
     }
+
+    pub fn set_funding_deadline_for_testing(&mut self, days_past: u8) -> Result<()> {
+        let loan = &mut self.loan;
+        let now = Clock::get()?.unix_timestamp;
+        // Set funding deadline to past date, keep loan in Funding state
+        loan.funding_deadline = now - (days_past as i64 * 86_400);
+        Ok(())
+    }
 }
