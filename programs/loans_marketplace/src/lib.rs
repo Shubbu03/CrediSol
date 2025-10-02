@@ -62,4 +62,13 @@ pub mod loans_marketplace {
     pub fn set_loan_for_default_testing(ctx: Context<SetLoanForDefaultTesting>, days_overdue: u8) -> Result<()> {
         ctx.accounts.set_loan_for_default_testing(days_overdue)
     }
+
+    pub fn lender_fund(ctx: Context<LenderFund>, amount: u64) -> Result<()> {
+        let lender_share_bump = ctx.bumps.lender_share;
+        ctx.accounts.lender_fund(amount, lender_share_bump)
+    }
+
+    pub fn set_funding_deadline_for_testing(ctx: Context<SetLoanForDefaultTesting>, days_past: u8) -> Result<()> {
+        ctx.accounts.set_funding_deadline_for_testing(days_past)
+    }
 }

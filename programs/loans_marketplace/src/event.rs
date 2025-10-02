@@ -19,3 +19,11 @@ pub struct LoanDefaulted {
     pub outstanding_principal: u64,
     pub outstanding_interest: u64,
 }
+
+#[event]
+pub struct LenderFunded {
+    pub loan: Pubkey,
+    pub lender: Pubkey,
+    pub amount: u64,
+    pub total_funded: u64,
+}

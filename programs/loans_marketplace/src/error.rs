@@ -31,4 +31,10 @@ pub enum LoanMarketplaceErrorCode {
 
     #[msg("Already claimed")]
     AlreadyClaimed,
+
+    #[msg("Funding expired")]
+    FundingExpired,
+
+    #[msg("Exceeds loan amount")]
+    ExceedsLoanAmount,
 }
