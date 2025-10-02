@@ -105,13 +105,6 @@ describe("loans_marketplace — initialize_config + create_loan_request", () => 
         await airdrop(borrower.publicKey, 1);
 
         const loanId = new BN(42);
-        const [loanPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("loan"), borrower.publicKey.toBuffer(), loanId.toArrayLike(Buffer, "le", 8)],
-            program.programId
-        );
-
-        const loanEscrowAta = await getAssociatedTokenAddress(usdcMint, loanPda, true);
-        const collateralEscrowAta = await getAssociatedTokenAddress(usdcMint, loanPda, true);
 
         try {
             await program.methods

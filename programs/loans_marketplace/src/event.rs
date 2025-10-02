@@ -10,3 +10,12 @@ pub struct LoanCreated {
     pub min_collateral_bps: u32,
     pub funding_deadline: i64,
 }
+
+#[event]
+pub struct LoanDefaulted {
+    pub loan: Pubkey,
+    pub borrower: Pubkey,
+    pub collateral_seized: u64,
+    pub outstanding_principal: u64,
+    pub outstanding_interest: u64,
+}
