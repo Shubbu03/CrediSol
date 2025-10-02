@@ -16,5 +16,4 @@ pub use lender_fund::*;
 pub use mark_default::*;
 pub use payout_to_lenders::*;
 pub use repay_loan::*;
-pub use payout_to_lenders::*;
 pub use set_loan_for_default_testing::*;
