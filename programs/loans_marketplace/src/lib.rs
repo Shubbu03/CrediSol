@@ -53,6 +53,8 @@ pub mod loans_marketplace {
 
     pub fn payout_to_lenders(ctx: Context<PayoutLenders>) -> Result<()> {
         ctx.accounts.payout()
+    }
+
     pub fn mark_default(ctx: Context<DefaultLoan>) -> Result<()> {
         ctx.accounts.mark_default()
     }    
