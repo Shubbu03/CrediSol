@@ -8,7 +8,7 @@ pub mod state;
 use anchor_lang::prelude::*;
 pub use constants::*;
 pub use event::*;
-use instructions::*;
+pub use instructions::*;
 pub use state::*;
 
 declare_id!("BTH9yYvKRBZHXJAPuv724mCMiDcjcnCqef7rDdSZUJWf");
@@ -53,5 +53,11 @@ pub mod loans_marketplace {
 
     pub fn payout_to_lenders(ctx: Context<PayoutLenders>) -> Result<()> {
         ctx.accounts.payout()
+    pub fn mark_default(ctx: Context<DefaultLoan>) -> Result<()> {
+        ctx.accounts.mark_default()
+    }    
+
+    pub fn set_loan_for_default_testing(ctx: Context<SetLoanForDefaultTesting>, days_overdue: u8) -> Result<()> {
+        ctx.accounts.set_loan_for_default_testing(days_overdue)
     }
 }
