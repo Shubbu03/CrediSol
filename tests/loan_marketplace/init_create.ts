@@ -24,9 +24,17 @@ describe("loans_marketplace — initialize_config + create_loan_request", () => 
 
     it("initializes config", async () => {
         const payer = (provider.wallet as any).payer;
-        usdcMint = await createMint(provider.connection, payer, payer.publicKey, null, 6);
-
         [configPda] = PublicKey.findProgramAddressSync([Buffer.from("config")], program.programId);
+
+        const existing = await program.account.config.fetchNullable(configPda);
+        if (existing) {
+            usdcMint = existing.usdcMint as PublicKey;
+            expect(existing.admin.equals(provider.wallet.publicKey)).to.be.true;
+            expect(existing.feeBps).to.equal(500);
+            return;
+        }
+
+        usdcMint = await createMint(provider.connection, payer, payer.publicKey, null, 6);
 
         await program.methods
             .initializeConfig(500)
