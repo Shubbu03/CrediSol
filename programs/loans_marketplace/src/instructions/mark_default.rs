@@ -53,13 +53,16 @@ impl<'info> DefaultLoan<'info> {
         // let outstanding = loan.outstanding_principal.max(1);
         if collateral_amount > 0 && escrow_balance > 0 {
             let amount_to_distribute = collateral_amount.min(escrow_balance);
-            msg!("STUB: Would distribute {} USDC collateral to lenders", amount_to_distribute);
-        //     payout_to_lenders(
-        //         amount_to_distribute,
-        //         PayoutKind::Collateral,
-        //         outstanding,
-        //         loan,
-        //     )?;
+            msg!(
+                "STUB: Would distribute {} USDC collateral to lenders",
+                amount_to_distribute
+            );
+            //     payout_to_lenders(
+            //         amount_to_distribute,
+            //         PayoutKind::Collateral,
+            //         outstanding,
+            //         loan,
+            //     )?;
         }
         loan.state = LoanState::Defaulted as u8;
         emit!(LoanDefaulted {

@@ -27,3 +27,14 @@ pub struct LenderFunded {
     pub amount: u64,
     pub total_funded: u64,
 }
+
+#[event]
+pub struct LoanSettled {
+    pub loan: Pubkey,
+}
+
+#[event]
+pub struct Repayment {
+    pub loan: Pubkey,
+    pub amount: u64,
+}

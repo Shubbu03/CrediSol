@@ -1,6 +1,6 @@
-use anchor_lang::prelude::*;
 use crate::state::loan::LoanState;
 use crate::state::LoanAccount;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct SetLoanForDefaultTesting<'info> {
@@ -9,10 +9,7 @@ pub struct SetLoanForDefaultTesting<'info> {
 }
 
 impl<'info> SetLoanForDefaultTesting<'info> {
-    pub fn set_loan_for_default_testing(
-        &mut self,
-        days_overdue: u8,
-    ) -> Result<()> {
+    pub fn set_loan_for_default_testing(&mut self, days_overdue: u8) -> Result<()> {
         let loan = &mut self.loan;
         let now = Clock::get()?.unix_timestamp;
 
@@ -31,6 +28,26 @@ impl<'info> SetLoanForDefaultTesting<'info> {
         let now = Clock::get()?.unix_timestamp;
         // Set funding deadline to past date, keep loan in Funding state
         loan.funding_deadline = now - (days_past as i64 * 86_400);
+        Ok(())
+    }
+
+    pub fn set_loan_for_repayment_testing(&mut self) -> Result<()> {
+        let loan = &mut self.loan;
+        let now = Clock::get()?.unix_timestamp;
+
+        loan.state = LoanState::InRepayment as u8;
+        loan.start_ts = now - (5 * 86_400);
+        loan.due_ts = now + (25 * 86_400);
+        loan.last_accrual_ts = loan.start_ts;
+        loan.funded_amount = loan.amount;
+        loan.outstanding_principal = loan.amount;
+        loan.total_repaid_principal = 0;
+        loan.total_repaid_interest = 0;
+        loan.accrued_interest = 0;
+
+        // Set collateral amount to what was actually deposited
+        loan.collateral_amount = 200_000_000; // 200 USDC
+
         Ok(())
     }
 }
