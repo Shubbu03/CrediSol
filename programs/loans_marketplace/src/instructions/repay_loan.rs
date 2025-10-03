@@ -10,11 +10,8 @@ use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 pub struct RepayLoan<'info> {
     #[account(mut, has_one = borrower)]
     pub loan: Account<'info, LoanAccount>,
-
     pub borrower: Signer<'info>,
-
     pub config: Account<'info, Config>,
-
     /// CHECK: PDA authority
     #[account(
         seeds = [b"loan", loan.borrower.as_ref(), &loan.loan_id.to_le_bytes()],
@@ -28,13 +25,6 @@ pub struct RepayLoan<'info> {
         constraint = loan_escrow_ata.owner == loan_signer.key(),
     )]
     pub loan_escrow_ata: Account<'info, TokenAccount>,
-
-    #[account(
-        mut,
-        constraint = collateral_escrow_ata.mint == config.usdc_mint,
-        constraint = collateral_escrow_ata.owner == loan_signer.key(),
-    )]
-    pub collateral_escrow_ata: Account<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -118,28 +108,26 @@ impl<'info> RepayLoan<'info> {
         if loan.outstanding_principal == 0 && loan.accrued_interest == 0 {
             let seeds = &[
                 b"loan".as_ref(),
-                loan.borrower.as_ref(),
+                loan.borrower.as_ref(), 
                 &loan.loan_id.to_le_bytes(),
                 &[loan.bump],
             ];
             let signer = &[&seeds[..]];
-
-            // Return collateral to borrower
-            if self.collateral_escrow_ata.amount > 0 {
+            // Return ONLY the tracked collateral amount, not all escrow tokens
+            if loan.collateral_amount > 0 {
                 token::transfer(
                     CpiContext::new_with_signer(
                         self.token_program.to_account_info(),
                         Transfer {
-                            from: self.collateral_escrow_ata.to_account_info(),
+                            from: self.loan_escrow_ata.to_account_info(),
                             to: self.borrower_ata.to_account_info(),
                             authority: self.loan_signer.to_account_info(),
                         },
                         signer,
                     ),
-                    self.collateral_escrow_ata.amount,
+                    loan.collateral_amount, // Only return collateral, not repayments
                 )?;
             }
-
             loan.state = LoanState::Settled as u8;
             emit!(LoanSettled { loan: loan.key() });
         } else {

@@ -72,6 +72,10 @@ pub mod loans_marketplace {
         ctx.accounts.set_funding_deadline_for_testing(days_past)
     }
 
+    pub fn set_loan_for_repayment_testing(ctx: Context<SetLoanForDefaultTesting>) -> Result<()> {
+        ctx.accounts.set_loan_for_repayment_testing()
+    }
+
     pub fn repay_loan(ctx: Context<RepayLoan>, amount: u64) -> Result<()> {
         ctx.accounts.repay(amount)
     }
