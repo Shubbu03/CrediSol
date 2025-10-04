@@ -1,4 +1,15 @@
+#![allow(unexpected_cfgs, deprecated)]
+pub mod constants;
+pub mod error;
+pub mod event;
+pub mod instructions;
+pub mod state;
+
 use anchor_lang::prelude::*;
+pub use constants::*;
+pub use event::*;
+pub use instructions::*;
+pub use state::*;
 
 declare_id!("4PqY9kbQzanngrw48sHdCiK44AdCmw2VrEx485JVf7Jo");
 
@@ -6,11 +17,5 @@ declare_id!("4PqY9kbQzanngrw48sHdCiK44AdCmw2VrEx485JVf7Jo");
 pub mod score_attestor {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
-        Ok(())
-    }
 }
 
-#[derive(Accounts)]
-pub struct Initialize {}
