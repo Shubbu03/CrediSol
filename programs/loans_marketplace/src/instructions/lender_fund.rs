@@ -1,10 +1,10 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use crate::error::LoanMarketplaceErrorCode;
 use crate::state::config::Config;
 use crate::state::loan::LoanState;
 use crate::state::LoanAccount;
-use crate::error::LoanMarketplaceErrorCode;
 use crate::{LenderFunded, LenderShare, ANCHOR_DISCRIMINATOR};
+use anchor_lang::prelude::*;
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
 pub struct LenderFund<'info> {
@@ -43,7 +43,6 @@ pub struct LenderFund<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-
 impl<'info> LenderFund<'info> {
     pub fn lender_fund(&mut self, amount: u64, lender_share_bump: u8) -> Result<()> {
         require!(amount > 0, LoanMarketplaceErrorCode::InvalidParam);
@@ -60,7 +59,9 @@ impl<'info> LenderFund<'info> {
             LoanMarketplaceErrorCode::FundingExpired
         );
 
-        let new_funded = loan.funded_amount.checked_add(amount)
+        let new_funded = loan
+            .funded_amount
+            .checked_add(amount)
             .ok_or(LoanMarketplaceErrorCode::MathOverflow)?;
 
         require!(
@@ -95,8 +96,13 @@ impl<'info> LenderFund<'info> {
             LoanMarketplaceErrorCode::InvalidAccount
         );
 
-        share.principal = share.principal.checked_add(amount)
+        share.principal = share
+            .principal
+            .checked_add(amount)
             .ok_or(LoanMarketplaceErrorCode::MathOverflow)?;
+
+        // Calculate pro-rata basis points based on principal contribution
+        share.pro_rata_bps = ((share.principal as u128 * 10_000u128) / loan.amount as u128) as u32;
 
         loan.funded_amount = new_funded;
 

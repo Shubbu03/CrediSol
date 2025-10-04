@@ -19,6 +19,10 @@ impl<'info> SetLoanForDefaultTesting<'info> {
         loan.start_ts = loan.due_ts - (30 * 86_400); // Started 30 days before due
         loan.funded_amount = loan.amount;
         loan.last_accrual_ts = loan.start_ts;
+        loan.outstanding_principal = loan.amount;
+
+        // Set collateral amount to what was actually deposited
+        loan.collateral_amount = 200_000_000; // 200 USDC
 
         Ok(())
     }
