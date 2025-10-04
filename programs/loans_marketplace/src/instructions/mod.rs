@@ -7,6 +7,7 @@ pub mod mark_default;
 pub mod payout_to_lenders;
 pub mod repay_loan;
 pub mod set_loan_for_default_testing;
+pub mod deposit_collateral;
 
 pub use create_loan::*;
 pub use drawdown::*;
@@ -17,3 +18,4 @@ pub use mark_default::*;
 pub use payout_to_lenders::*;
 pub use repay_loan::*;
 pub use set_loan_for_default_testing::*;
+pub use deposit_collateral::*;

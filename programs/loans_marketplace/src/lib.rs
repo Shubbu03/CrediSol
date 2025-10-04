@@ -79,4 +79,8 @@ pub mod loans_marketplace {
     pub fn repay_loan(ctx: Context<RepayLoan>, amount: u64) -> Result<()> {
         ctx.accounts.repay(amount)
     }
+
+    pub fn deposit_collateral(ctx: Context<DepositCollateral>, amount: u64) -> Result<()> {
+        ctx.accounts.deposit_collateral(amount)
+    }
 }

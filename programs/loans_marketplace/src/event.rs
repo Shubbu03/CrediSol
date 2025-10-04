@@ -38,3 +38,11 @@ pub struct Repayment {
     pub loan: Pubkey,
     pub amount: u64,
 }
+
+#[event]
+pub struct CollateralDeposited {
+    pub loan: Pubkey,
+    pub borrower: Pubkey,
+    pub amount: u64,
+    pub total: u64,
+}
