@@ -1,5 +1,5 @@
-pub mod attestation;
+pub mod scoreattestation;
 pub mod config;
 
-pub use attestation::*;
+pub use scoreattestation::*;
 pub use config::*;
