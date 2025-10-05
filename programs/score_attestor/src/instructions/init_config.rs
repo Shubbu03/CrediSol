@@ -1,4 +1,6 @@
-use crate::{error::ScoreAttestorError, state::Config, event::ConfigInitialized};
+use crate::{
+    error::ScoreAttestorError, event::ConfigInitialized, state::Config, ANCHOR_DISCRIMINATOR,
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -8,7 +10,7 @@ pub struct InitializeConfig<'info> {
         payer = admin,
         seeds = [b"score_config"],
         bump,
-        space = Config::SPACE
+        space = ANCHOR_DISCRIMINATOR + Config::INIT_SPACE
     )]
     pub config: Account<'info, Config>,
 
@@ -23,7 +25,7 @@ impl<'info> InitializeConfig<'info> {
         &mut self,
         oracle_threshold: u8,
         max_staleness_secs: i64,
-        bump: u8
+        bump: u8,
     ) -> Result<()> {
         let cfg = &mut self.config;
 
@@ -31,10 +33,16 @@ impl<'info> InitializeConfig<'info> {
         cfg.bump = bump;
         cfg.paused = false;
 
-        require!(oracle_threshold > 0, ScoreAttestorError::InvalidOracleThreshold);
+        require!(
+            oracle_threshold > 0,
+            ScoreAttestorError::InvalidOracleThreshold
+        );
         cfg.oracle_threshold = oracle_threshold;
 
-        require!(max_staleness_secs > 0, ScoreAttestorError::InvalidMaxStaleness);
+        require!(
+            max_staleness_secs > 0,
+            ScoreAttestorError::InvalidMaxStaleness
+        );
         cfg.max_staleness_secs = max_staleness_secs;
 
         cfg.oracles = Vec::new();
@@ -49,4 +57,3 @@ impl<'info> InitializeConfig<'info> {
         Ok(())
     }
 }
-

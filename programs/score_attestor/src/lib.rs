@@ -25,7 +25,8 @@ pub mod score_attestor {
         max_staleness_secs: i64,
     ) -> Result<()> {
         let bump = ctx.bumps.config;
-        ctx.accounts.init_config(oracle_threshold, max_staleness_secs, bump)
+        ctx.accounts
+            .init_config(oracle_threshold, max_staleness_secs, bump)
     }
 
     pub fn set_admin(ctx: Context<AdminOnly>, new_admin: Pubkey) -> Result<()> {
@@ -63,5 +64,44 @@ pub mod score_attestor {
         enabled: bool,
     ) -> Result<()> {
         ctx.accounts.set_model_status(model_id, version, enabled)
+    }
+
+    pub fn revoke_attestation(ctx: Context<AdminAndScore>) -> Result<()> {
+        ctx.accounts.revoke_attestation()
+    }
+
+    pub fn update_attestation_expiry(
+        ctx: Context<AdminAndScore>,
+        new_expiry_ts: i64,
+    ) -> Result<()> {
+        ctx.accounts.update_attestation_expiry(new_expiry_ts)
+    }
+
+    pub fn post_score_attestation(
+        ctx: Context<PostScoreAttestation>,
+        model_id: ModelId,
+        model_version: u16,
+        feature_commitment: FeatureCommitment,
+        score: u16,
+        grade: u8,
+        pd_bps: u32,
+        recommended_min_collateral_bps: u16,
+        expiry_ts: i64,
+        issuer: Pubkey,
+    ) -> Result<()> {
+        let score_bump = ctx.bumps.score;
+        ctx.accounts.post_score_attestation(
+            score_bump,
+            &ctx.remaining_accounts,
+            model_id,
+            model_version,
+            feature_commitment,
+            score,
+            grade,
+            pd_bps,
+            recommended_min_collateral_bps,
+            expiry_ts,
+            issuer,
+        )
     }
 }
