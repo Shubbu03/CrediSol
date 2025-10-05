@@ -46,7 +46,7 @@ impl<'info> RepayLoan<'info> {
             LoanMarketplaceErrorCode::InvalidState
         );
 
-        // repayment from borrower to loan escrow
+        // Transfer repayment from borrower to loan escrow
         token::transfer(
             CpiContext::new(
                 self.token_program.to_account_info(),
@@ -59,7 +59,7 @@ impl<'info> RepayLoan<'info> {
             repay_amount,
         )?;
 
-        // Simple interest accrual
+        // Accrue simple interest
         let now = Clock::get()?.unix_timestamp;
         if now > loan.last_accrual_ts {
             let time_elapsed = now - loan.last_accrual_ts;
@@ -104,17 +104,19 @@ impl<'info> RepayLoan<'info> {
             remaining = remaining.saturating_sub(pay_principal);
         }
 
-        // If fully repaid, settle loan and return collateral
+        // If fully repaid, settle loan and return only remaining collateral
         if loan.outstanding_principal == 0 && loan.accrued_interest == 0 {
             let seeds = &[
                 b"loan".as_ref(),
-                loan.borrower.as_ref(), 
+                loan.borrower.as_ref(),
                 &loan.loan_id.to_le_bytes(),
                 &[loan.bump],
             ];
             let signer = &[&seeds[..]];
-            // Return ONLY the tracked collateral amount, not all escrow tokens
-            if loan.collateral_amount > 0 {
+
+            let collateral_to_return = loan.collateral_amount.min(self.loan_escrow_ata.amount);
+
+            if collateral_to_return > 0 {
                 token::transfer(
                     CpiContext::new_with_signer(
                         self.token_program.to_account_info(),
@@ -125,9 +127,12 @@ impl<'info> RepayLoan<'info> {
                         },
                         signer,
                     ),
-                    loan.collateral_amount, // Only return collateral, not repayments
+                    collateral_to_return,
                 )?;
+                loan.collateral_amount =
+                    loan.collateral_amount.saturating_sub(collateral_to_return);
             }
+
             loan.state = LoanState::Settled as u8;
             emit!(LoanSettled { loan: loan.key() });
         } else {
