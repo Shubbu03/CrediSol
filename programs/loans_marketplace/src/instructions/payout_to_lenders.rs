@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::transfer;
-use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::Mint;
+use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 use crate::error::LoanMarketplaceErrorCode;
+use crate::event::LenderPaidOut;
 use crate::state::{LenderShare, LoanAccount, LoanState};
 
 #[derive(Accounts)]
@@ -58,10 +59,12 @@ impl<'info> PayoutLenders<'info> {
         // entitlement based on pro-rata share
         let entitlement = (self.loan.collateral_amount as u128)
             .checked_mul(self.lender_share.pro_rata_bps as u128)
-            .unwrap()
+            .ok_or(LoanMarketplaceErrorCode::MathOverflow)?
             / 10_000u128;
-
         let entitlement = entitlement as u64;
+
+        // Only proceed if there is something to claim
+        require!(entitlement > 0, LoanMarketplaceErrorCode::InvalidParam);
 
         // transfer collateral portion from escrow to lender
         let seeds: &[&[u8]] = &[
@@ -84,6 +87,13 @@ impl<'info> PayoutLenders<'info> {
         // mark this lender's share as "claimed" via repaid fields
         self.lender_share.repaid_principal = entitlement;
         self.lender_share.repaid_interest = 0;
+
+        // emit event
+        emit!(LenderPaidOut {
+            lender: self.lender.key(),
+            loan: self.loan.key(),
+            amount: entitlement,
+        });
 
         Ok(())
     }
