@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
     #[account(
-        init,
+        init_if_needed,
         payer = admin,
         seeds = [b"score_config", admin.key().as_ref()],
         bump,
