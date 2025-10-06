@@ -8,7 +8,7 @@ pub struct InitializeConfig<'info> {
     #[account(
         init,
         payer = admin,
-        seeds = [b"score_config"],
+        seeds = [b"score_config", admin.key().as_ref()],
         bump,
         space = ANCHOR_DISCRIMINATOR + Config::INIT_SPACE
     )]
