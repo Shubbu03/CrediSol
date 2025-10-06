@@ -14,7 +14,7 @@ use anchor_lang::prelude::*;
 pub struct AdminOnly<'info> {
     #[account(
         mut,
-        seeds = [b"score_config"],
+        seeds = [b"score_config", admin.key().as_ref()],
         bump = config.bump,
         has_one = admin
     )]

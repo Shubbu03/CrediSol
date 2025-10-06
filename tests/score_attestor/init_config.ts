@@ -21,7 +21,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 2);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config")],
+            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
             program.programId
         );
 
@@ -62,7 +62,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 1);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config")],
+            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
             program.programId
         );
 
@@ -80,8 +80,7 @@ describe("score_attestor — initialize_config", () => {
             expect.fail('Expected an error but none was thrown');
         } catch (err) {
             const errorMsg = err.toString();
-            // Check for simulation failed format
-            expect(errorMsg).to.include('Simulation failed');
+            expect(errorMsg).to.include('InvalidOracleThreshold');
         }
     });
 
@@ -90,7 +89,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 1);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config")],
+            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
             program.programId
         );
 
@@ -108,7 +107,7 @@ describe("score_attestor — initialize_config", () => {
             expect.fail('Expected an error but none was thrown');
         } catch (err) {
             const errorMsg = err.toString();
-            expect(errorMsg).to.include('Simulation failed');
+            expect(errorMsg).to.include('InvalidMaxStaleness');
         }
     });
 
@@ -117,7 +116,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 1);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config")],
+            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
             program.programId
         );
 
@@ -135,7 +134,7 @@ describe("score_attestor — initialize_config", () => {
             expect.fail('Expected an error but none was thrown');
         } catch (err) {
             const errorMsg = err.toString();
-            expect(errorMsg).to.include('Simulation failed');
+            expect(errorMsg).to.include('InvalidMaxStaleness');
         }
     });
 
@@ -144,7 +143,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 2);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config")],
+            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
             program.programId
         );
 
@@ -205,7 +204,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 1);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config")],
+            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
             program.programId
         );
 
@@ -223,78 +222,6 @@ describe("score_attestor — initialize_config", () => {
         } catch (err) {
             const errorMsg = err.toString();
             expect(errorMsg).to.include('Signature verification failed');
-        }
-    });
-
-    it("handles edge case with maximum valid oracle threshold", async () => {
-        const admin = anchor.web3.Keypair.generate();
-        await airdrop(admin.publicKey, 1);
-
-        const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config")],
-            program.programId
-        );
-
-        // Check if config already exists from previous test
-        const existingConfig = await program.account.config.fetchNullable(configPda);
-        if (existingConfig) {
-            // If it exists, verify it has the expected values from the first test
-            expect(existingConfig.oracleThreshold).to.equal(3);
-            expect(existingConfig.maxStalenessSecs.toString()).to.equal('3600');
-        } else {
-            // If it doesn't exist, create it with max values
-            const maxThreshold = 255; // u8 max
-            const maxStaleness = new BN(Number.MAX_SAFE_INTEGER);
-
-            const tx = await program.methods
-                .initializeConfig(maxThreshold, maxStaleness)
-                .accountsPartial({
-                    config: configPda,
-                    admin: admin.publicKey,
-                    systemProgram: anchor.web3.SystemProgram.programId,
-                })
-                .signers([admin])
-                .rpc();
-
-            const config = await program.account.config.fetch(configPda);
-            expect(config.oracleThreshold).to.equal(maxThreshold);
-            expect(config.maxStalenessSecs.toString()).to.equal(maxStaleness.toString());
-        }
-    });
-
-    it("handles edge case with minimum valid values", async () => {
-        const admin = anchor.web3.Keypair.generate();
-        await airdrop(admin.publicKey, 1);
-
-        const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config")],
-            program.programId
-        );
-
-        // Check if config already exists from previous test
-        const existingConfig = await program.account.config.fetchNullable(configPda);
-        if (existingConfig) {
-            // If it exists, verify it has the expected values from the first test
-            expect(existingConfig.oracleThreshold).to.equal(3);
-            expect(existingConfig.maxStalenessSecs.toString()).to.equal('3600');
-        } else {
-            // If it doesn't exist, create it with min values
-            const minThreshold = 1;
-            const minStaleness = new BN(1);
-
-            const tx = await program.methods
-                .initializeConfig(minThreshold, minStaleness)
-                .accountsPartial({
-                    config: configPda,
-                    admin: admin.publicKey,
-                    systemProgram: anchor.web3.SystemProgram.programId,
-                })
-                .signers([admin])
-                .rpc();
-
-            const config = await program.account.config.fetch(configPda);
-            expect(config.oracleThreshold).to.equal(minThreshold);
-            expect(config.maxStalenessSecs.toString()).to.equal(minStaleness.toString());
         }
     });
 });

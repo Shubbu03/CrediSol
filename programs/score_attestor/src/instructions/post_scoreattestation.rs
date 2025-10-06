@@ -19,7 +19,7 @@ use anchor_lang::prelude::*;
 pub struct PostScoreAttestation<'info> {
     /// Config to check allowlists and settings
     #[account(
-        seeds = [b"score_config"],
+        seeds = [b"score_config", config.admin.as_ref()],
         bump = config.bump
     )]
     pub config: Account<'info, Config>,
