@@ -15,24 +15,29 @@ describe("score_attestor — integration full cycle", () => {
         await provider.connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
     }
 
+    function toModelIdBuffer(m: any): Buffer {
+        const idObj = m.modelId ?? m;
+        if (Array.isArray(idObj?.["0"])) return Buffer.from(idObj["0"]);
+        if (Array.isArray(idObj)) return Buffer.from(idObj);
+        if (idObj instanceof Uint8Array) return Buffer.from(idObj);
+        throw new Error("Unexpected ModelId shape");
+    }
+
     async function setupConfig(admin: anchor.web3.Keypair, oracleThreshold = 3) {
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
+            [Buffer.from("score_config")],
             program.programId
         );
 
-        const existing = await program.account.config.fetchNullable(configPda);
-        if (!existing) {
-            await program.methods
-                .initializeConfig(oracleThreshold, new BN(3600))
-                .accountsPartial({
-                    config: configPda,
-                    admin: admin.publicKey,
-                    systemProgram: anchor.web3.SystemProgram.programId,
-                })
-                .signers([admin])
-                .rpc();
-        }
+        await program.methods
+            .initializeConfig(oracleThreshold, new BN(3600))
+            .accountsPartial({
+                config: configPda,
+                admin: admin.publicKey,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            })
+            .signers([admin])
+            .rpc();
 
         // Ensure admin is an oracle
         let cfg = await program.account.config.fetch(configPda);
@@ -42,6 +47,7 @@ describe("score_attestor — integration full cycle", () => {
                 .accountsPartial({ config: configPda, admin: admin.publicKey })
                 .signers([admin])
                 .rpc();
+
             cfg = await program.account.config.fetch(configPda);
         }
 
@@ -62,7 +68,7 @@ describe("score_attestor — integration full cycle", () => {
         // Ensure a model exists and is enabled (id = 0x01.., version = 1)
         cfg = await program.account.config.fetch(configPda);
         const modelIdBytes = new Uint8Array(32).fill(1);
-        const modelExists = cfg.models.some((m: any) => m.version === 1 && m.modelId[0].every((b: number, i: number) => b === modelIdBytes[i]));
+        const modelExists = cfg.models.some((m: any) => m.version === 1 && toModelIdBuffer(m).equals(Buffer.from(modelIdBytes)));
         if (!modelExists) {
             await program.methods
                 .addModel({ 0: Array.from(modelIdBytes) }, 1)
@@ -92,6 +98,7 @@ describe("score_attestor — integration full cycle", () => {
             [Buffer.from("score"), subject.toBuffer(), loan.toBuffer()],
             program.programId
         );
+
         const cfg = await program.account.config.fetch(prepared.configPda);
         const threshold = cfg.oracleThreshold as number;
         const needed = override?.oracleSignerCount ?? threshold;
@@ -127,8 +134,8 @@ describe("score_attestor — integration full cycle", () => {
     it("happy path: post -> revoke -> update expiry", async () => {
         const admin = anchor.web3.Keypair.generate();
         await airdrop(admin.publicKey, 2);
-        const prepared = await setupConfig(admin);
 
+        const prepared = await setupConfig(admin);
         const subject = anchor.web3.Keypair.generate().publicKey;
         const loan = anchor.web3.Keypair.generate().publicKey;
         const now = Math.floor(Date.now() / 1000);
@@ -175,6 +182,7 @@ describe("score_attestor — integration full cycle", () => {
     it("pause blocks post and unpause allows post again", async () => {
         const admin = anchor.web3.Keypair.generate();
         await airdrop(admin.publicKey, 2);
+
         const prepared = await setupConfig(admin);
 
         await program.methods
@@ -208,8 +216,8 @@ describe("score_attestor — integration full cycle", () => {
     it("re-post overwrites fields in same PDA", async () => {
         const admin = anchor.web3.Keypair.generate();
         await airdrop(admin.publicKey, 2);
-        const prepared = await setupConfig(admin);
 
+        const prepared = await setupConfig(admin);
         const subject = anchor.web3.Keypair.generate().publicKey;
         const loan = anchor.web3.Keypair.generate().publicKey;
         const now = Math.floor(Date.now() / 1000);

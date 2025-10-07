@@ -3,7 +3,7 @@ import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
 import { expect } from "chai";
 import { ScoreAttestor } from "../../target/types/score_attestor";
-import { BN } from "bn.js";
+import BN from "bn.js";
 
 describe("admin_only", () => {
     const provider = AnchorProvider.env();
@@ -14,30 +14,29 @@ describe("admin_only", () => {
     let bump: number;
     let newAdmin: Keypair;
 
+    const toModelIdBuffer = (m: any): Buffer => {
+        const idObj = m.modelId ?? m;
+        if (!idObj) throw new Error("Missing modelId");
+        if (Array.isArray(idObj?.["0"])) return Buffer.from(idObj["0"] as number[]);
+        if (Array.isArray(idObj)) return Buffer.from(idObj as number[]);
+        if (idObj instanceof Uint8Array) return Buffer.from(idObj as Uint8Array);
+        throw new Error("Unexpected ModelId shape");
+    };
+
     before(async () => {
         [configPda, bump] = PublicKey.findProgramAddressSync(
             [Buffer.from("score_config")],
             program.programId
         );
 
-        let configExists = true;
-        try {
-            await program.account.config.fetch(configPda);
-        } catch {
-            configExists = false;
-        }
-
-        if (!configExists) {
-            await program.methods
-                .initializeConfig(3, new BN(3600))
-                .accountsStrict({
-                    config: configPda,
-                    admin: provider.wallet.publicKey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([])
-                .rpc();
-        }
+        await program.methods
+            .initializeConfig(3, new BN(3600))
+            .accountsStrict({
+                config: configPda,
+                admin: provider.wallet.publicKey,
+                systemProgram: SystemProgram.programId,
+            })
+            .rpc();
     });
 
     describe("Admin Changes", () => {
@@ -118,7 +117,6 @@ describe("admin_only", () => {
 
         it("sets oracle threshold", async () => {
             const config = await program.account.config.fetch(configPda);
-
             if (config.oracles.length === 0) {
                 const oracle = Keypair.generate().publicKey;
                 await program.methods
@@ -150,12 +148,12 @@ describe("admin_only", () => {
 
     describe("Models", () => {
         it("adds a model and changes its status", async () => {
-            const modelId = Array.from(Buffer.alloc(32, 1));
-            const modelIdWrapper = { 0: modelId };
+            const modelIdBytes = Buffer.alloc(32, 1);
+            const modelIdWrapper = { 0: Array.from(modelIdBytes) };
             const version = 1;
 
             await program.methods
-                .addModel(modelIdWrapper, version)
+                .addModel(modelIdWrapper as any, version)
                 .accounts({
                     config: configPda,
                     admin: newAdmin.publicKey,
@@ -166,14 +164,13 @@ describe("admin_only", () => {
             let config = await program.account.config.fetch(configPda);
             let model = config.models.find(
                 (m: any) =>
-                    Buffer.from(m.modelId[0]).equals(Buffer.from(modelId)) &&
-                    m.version === version
+                    toModelIdBuffer(m).equals(modelIdBytes) && m.version === version
             );
             expect(model).to.exist;
             expect(model.enabled).to.be.true;
 
             await program.methods
-                .setModelStatus(modelIdWrapper, version, false)
+                .setModelStatus(modelIdWrapper as any, version, false)
                 .accounts({
                     config: configPda,
                     admin: newAdmin.publicKey,
@@ -184,8 +181,7 @@ describe("admin_only", () => {
             config = await program.account.config.fetch(configPda);
             model = config.models.find(
                 (m: any) =>
-                    Buffer.from(m.modelId[0]).equals(Buffer.from(modelId)) &&
-                    m.version === version
+                    toModelIdBuffer(m).equals(modelIdBytes) && m.version === version
             );
             expect(model.enabled).to.be.false;
         });
@@ -194,6 +190,7 @@ describe("admin_only", () => {
     describe("Max Staleness", () => {
         it("sets max staleness", async () => {
             const maxStalenessSecs = new BN(7200);
+
             await program.methods
                 .setMaxStaleness(maxStalenessSecs)
                 .accounts({
@@ -204,7 +201,9 @@ describe("admin_only", () => {
                 .rpc();
 
             const config = await program.account.config.fetch(configPda);
-            expect(config.maxStalenessSecs.toNumber()).to.equal(maxStalenessSecs.toNumber());
+            expect(config.maxStalenessSecs.toNumber()).to.equal(
+                maxStalenessSecs.toNumber()
+            );
         });
     });
 });

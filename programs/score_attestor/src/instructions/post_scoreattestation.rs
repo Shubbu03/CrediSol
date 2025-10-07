@@ -1,9 +1,6 @@
 /*
-In Anchor, you cannot declare remaining_accounts in the #[derive(Accounts)] struct.
-Anchor automatically provides all extra accounts passed to the instruction at runtime via:
-
-ctx.remaining_accounts
-But inside your impl PostScoreAttestation, you’re trying to access self.remaining_accounts, which doesn’t exist.
+Note: Anchor provides extra accounts via ctx.remaining_accounts in the handler.
+Here we accept `remaining: &[AccountInfo]` from the #[program] entrypoint and pass it into this impl.
 */
 
 use crate::{
@@ -19,7 +16,8 @@ use anchor_lang::prelude::*;
 pub struct PostScoreAttestation<'info> {
     /// Config to check allowlists and settings
     #[account(
-        seeds = [b"score_config", config.admin.as_ref()],
+        // FIX: use stable seeds that do not depend on mutable fields
+        seeds = [b"score_config"],
         bump = config.bump
     )]
     pub config: Account<'info, Config>,
@@ -49,7 +47,7 @@ impl<'info> PostScoreAttestation<'info> {
     pub fn post_score_attestation(
         &mut self,
         score_bump: u8,
-        remaining: &[AccountInfo],
+        remaining: &[AccountInfo],          // pass ctx.remaining_accounts from handler
         model_id: ModelId,
         model_version: u16,
         feature_commitment: FeatureCommitment,
@@ -61,15 +59,13 @@ impl<'info> PostScoreAttestation<'info> {
         issuer: Pubkey,
     ) -> Result<()> {
         let cfg = &self.config;
-
         require!(!cfg.paused, ScoreAttestorError::Paused);
 
+        // Enforce oracle signer quorum from remaining accounts
         let sigs = count_valid_oracle_signers(cfg, remaining);
-        require!(
-            sigs >= cfg.oracle_threshold,
-            ScoreAttestorError::InsufficientOracleSigners
-        );
+        require!(sigs >= cfg.oracle_threshold, ScoreAttestorError::InsufficientOracleSigners);
 
+        // Model allowlist check
         require!(
             cfg.models
                 .iter()

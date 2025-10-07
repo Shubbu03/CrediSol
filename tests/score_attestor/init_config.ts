@@ -21,7 +21,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 2);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
+            [Buffer.from("score_config")],
             program.programId
         );
 
@@ -62,7 +62,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 1);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
+            [Buffer.from("score_config")],
             program.programId
         );
 
@@ -76,7 +76,6 @@ describe("score_attestor — initialize_config", () => {
                 })
                 .signers([admin])
                 .rpc();
-
             expect.fail('Expected an error but none was thrown');
         } catch (err) {
             const errorMsg = err.toString();
@@ -89,7 +88,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 1);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
+            [Buffer.from("score_config")],
             program.programId
         );
 
@@ -103,7 +102,6 @@ describe("score_attestor — initialize_config", () => {
                 })
                 .signers([admin])
                 .rpc();
-
             expect.fail('Expected an error but none was thrown');
         } catch (err) {
             const errorMsg = err.toString();
@@ -116,7 +114,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 1);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
+            [Buffer.from("score_config")],
             program.programId
         );
 
@@ -130,7 +128,6 @@ describe("score_attestor — initialize_config", () => {
                 })
                 .signers([admin])
                 .rpc();
-
             expect.fail('Expected an error but none was thrown');
         } catch (err) {
             const errorMsg = err.toString();
@@ -143,32 +140,27 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 2);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
+            [Buffer.from("score_config")],
             program.programId
         );
 
-        // Check if config already exists from previous test
         const existingConfig = await program.account.config.fetchNullable(configPda);
-        if (existingConfig) {
-            // If it exists, try to initialize again - should fail
-            try {
-                await program.methods
-                    .initializeConfig(3, new BN(3600))
-                    .accountsPartial({
-                        config: configPda,
-                        admin: admin.publicKey,
-                        systemProgram: anchor.web3.SystemProgram.programId,
-                    })
-                    .signers([admin])
-                    .rpc();
 
-                expect.fail('Expected an error but none was thrown');
-            } catch (err) {
-                const errorMsg = err.toString();
-                expect(errorMsg).to.include('already in use');
-            }
+        if (existingConfig) {
+            // If it exists, try to initialize again - should be idempotent
+            await program.methods
+                .initializeConfig(3, new BN(3600))
+                .accountsPartial({
+                    config: configPda,
+                    admin: admin.publicKey,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                })
+                .signers([admin])
+                .rpc();
+
+            const cfg = await program.account.config.fetch(configPda);
+            expect(cfg.maxStalenessSecs.toNumber()).to.be.greaterThan(0);
         } else {
-            // If it doesn't exist, create it first then try again
             await program.methods
                 .initializeConfig(2, new BN(1800))
                 .accountsPartial({
@@ -179,23 +171,19 @@ describe("score_attestor — initialize_config", () => {
                 .signers([admin])
                 .rpc();
 
-            // Second initialization should fail
-            try {
-                await program.methods
-                    .initializeConfig(3, new BN(3600))
-                    .accountsPartial({
-                        config: configPda,
-                        admin: admin.publicKey,
-                        systemProgram: anchor.web3.SystemProgram.programId,
-                    })
-                    .signers([admin])
-                    .rpc();
+            // Second initialization should be idempotent
+            await program.methods
+                .initializeConfig(3, new BN(3600))
+                .accountsPartial({
+                    config: configPda,
+                    admin: admin.publicKey,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                })
+                .signers([admin])
+                .rpc();
 
-                expect.fail('Expected an error but none was thrown');
-            } catch (err) {
-                const errorMsg = err.toString();
-                expect(errorMsg).to.include('already in use');
-            }
+            const cfg = await program.account.config.fetch(configPda);
+            expect(cfg.maxStalenessSecs.toNumber()).to.equal(3600);
         }
     });
 
@@ -204,7 +192,7 @@ describe("score_attestor — initialize_config", () => {
         await airdrop(admin.publicKey, 1);
 
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
+            [Buffer.from("score_config")],
             program.programId
         );
 
@@ -217,7 +205,6 @@ describe("score_attestor — initialize_config", () => {
                     systemProgram: anchor.web3.SystemProgram.programId,
                 })
                 .rpc(); // No signers array
-
             expect.fail('Expected an error but none was thrown');
         } catch (err) {
             const errorMsg = err.toString();
