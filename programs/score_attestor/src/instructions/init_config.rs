@@ -6,9 +6,9 @@ use anchor_lang::prelude::*;
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
     #[account(
-        init,
+        init_if_needed,
         payer = admin,
-        seeds = [b"score_config", admin.key().as_ref()],
+        seeds = [b"score_config"],
         bump,
         space = ANCHOR_DISCRIMINATOR + Config::INIT_SPACE
     )]
@@ -33,16 +33,10 @@ impl<'info> InitializeConfig<'info> {
         cfg.bump = bump;
         cfg.paused = false;
 
-        require!(
-            oracle_threshold > 0,
-            ScoreAttestorError::InvalidOracleThreshold
-        );
+        require!(oracle_threshold > 0, ScoreAttestorError::InvalidOracleThreshold);
         cfg.oracle_threshold = oracle_threshold;
 
-        require!(
-            max_staleness_secs > 0,
-            ScoreAttestorError::InvalidMaxStaleness
-        );
+        require!(max_staleness_secs > 0, ScoreAttestorError::InvalidMaxStaleness);
         cfg.max_staleness_secs = max_staleness_secs;
 
         cfg.oracles = Vec::new();

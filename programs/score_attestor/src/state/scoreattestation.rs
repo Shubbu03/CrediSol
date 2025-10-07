@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-
 use crate::{types::FeatureCommitment, ModelId};
 
 #[account]

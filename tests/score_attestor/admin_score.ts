@@ -18,7 +18,7 @@ describe("score_attestor — admin_score", () => {
 
     async function setupConfig(admin: anchor.web3.Keypair) {
         const [configPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("score_config"), admin.publicKey.toBuffer()],
+            [Buffer.from("score_config")],
             program.programId
         );
 
@@ -26,6 +26,16 @@ describe("score_attestor — admin_score", () => {
         const existingConfig = await program.account.config.fetchNullable(configPda);
         if (!existingConfig) {
             // Create config matching canonical defaults used elsewhere
+            await program.methods
+                .initializeConfig(3, new BN(3600))
+                .accountsPartial({
+                    config: configPda,
+                    admin: admin.publicKey,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                })
+                .signers([admin])
+                .rpc();
+        } else {
             await program.methods
                 .initializeConfig(3, new BN(3600))
                 .accountsPartial({
@@ -59,7 +69,6 @@ describe("score_attestor — admin_score", () => {
         while (config.oracles.length < config.oracleThreshold) {
             const additionalOracle = anchor.web3.Keypair.generate();
             await airdrop(additionalOracle.publicKey, 1);
-
             await program.methods
                 .addOracle(additionalOracle.publicKey)
                 .accountsPartial({
@@ -122,10 +131,12 @@ describe("score_attestor — admin_score", () => {
         // Create oracle signers from newly created oracle keypairs we control
         // Ensure we have oracleThreshold distinct signers available
         const oracleKeypairs: anchor.web3.Keypair[] = [];
+
         // If admin is an oracle, include admin first
         if (config.oracles.some(o => o.equals(admin.publicKey))) {
             oracleKeypairs.push(admin);
         }
+
         while (oracleKeypairs.length < config.oracleThreshold) {
             const kp = anchor.web3.Keypair.generate();
             await airdrop(kp.publicKey, 1);
@@ -139,6 +150,7 @@ describe("score_attestor — admin_score", () => {
                 .rpc();
             oracleKeypairs.push(kp);
         }
+
         const oracleSigners = oracleKeypairs.map(kp => ({
             pubkey: kp.publicKey,
             isSigner: true,
@@ -260,7 +272,6 @@ describe("score_attestor — admin_score", () => {
                     })
                     .signers([nonAdmin])
                     .rpc();
-
                 expect.fail('Expected an error but none was thrown');
             } catch (err) {
                 const errorMsg = err.toString();
@@ -303,7 +314,6 @@ describe("score_attestor — admin_score", () => {
                         score: scorePda,
                     })
                     .rpc(); // No signers array
-
                 expect.fail('Expected an error but none was thrown');
             } catch (err) {
                 const errorMsg = err.toString();
@@ -400,7 +410,6 @@ describe("score_attestor — admin_score", () => {
                     })
                     .signers([admin])
                     .rpc();
-
                 expect.fail('Expected an error but none was thrown');
             } catch (err) {
                 const errorMsg = err.toString();
@@ -443,7 +452,6 @@ describe("score_attestor — admin_score", () => {
                     })
                     .signers([admin])
                     .rpc();
-
                 expect.fail('Expected an error but none was thrown');
             } catch (err) {
                 const errorMsg = err.toString();
@@ -488,7 +496,6 @@ describe("score_attestor — admin_score", () => {
                     })
                     .signers([nonAdmin])
                     .rpc();
-
                 expect.fail('Expected an error but none was thrown');
             } catch (err) {
                 const errorMsg = err.toString();
@@ -532,7 +539,6 @@ describe("score_attestor — admin_score", () => {
                         score: scorePda,
                     })
                     .rpc(); // No signers array
-
                 expect.fail('Expected an error but none was thrown');
             } catch (err) {
                 const errorMsg = err.toString();
@@ -546,6 +552,7 @@ describe("score_attestor — admin_score", () => {
 
             const subject = anchor.web3.Keypair.generate().publicKey;
             const loan = anchor.web3.Keypair.generate().publicKey;
+
             const now = Math.floor(Date.now() / 1000);
             const originalExpiryTs = now + 3600;
             const maxExpiryTs = Number.MAX_SAFE_INTEGER;
@@ -586,6 +593,7 @@ describe("score_attestor — admin_score", () => {
 
             const subject = anchor.web3.Keypair.generate().publicKey;
             const loan = anchor.web3.Keypair.generate().publicKey;
+
             const now = Math.floor(Date.now() / 1000);
             const originalExpiryTs = now + 3600;
             const minExpiryTs = now + 30; // ensure strictly > now with buffer
@@ -619,65 +627,66 @@ describe("score_attestor — admin_score", () => {
             const scoreAfter = await program.account.scoreAttestation.fetch(scorePda);
             expect(scoreAfter.expiryTs.toNumber()).to.equal(minExpiryTs);
         });
-    });
 
-    describe("integration tests", () => {
-        it("can revoke and then update expiry of the same attestation", async () => {
-            const admin = anchor.web3.Keypair.generate();
-            await airdrop(admin.publicKey, 2);
+        describe("integration tests", () => {
+            it("can revoke and then update expiry of the same attestation", async () => {
+                const admin = anchor.web3.Keypair.generate();
+                await airdrop(admin.publicKey, 2);
 
-            const subject = anchor.web3.Keypair.generate().publicKey;
-            const loan = anchor.web3.Keypair.generate().publicKey;
-            const now = Math.floor(Date.now() / 1000);
-            const originalExpiryTs = now + 3600;
-            const newExpiryTs = now + 7200;
+                const subject = anchor.web3.Keypair.generate().publicKey;
+                const loan = anchor.web3.Keypair.generate().publicKey;
 
-            // Create score attestation
-            const { scorePda } = await createScoreAttestation(
-                admin,
-                subject,
-                loan,
-                750,
-                3,
-                500,
-                1000,
-                originalExpiryTs
-            );
+                const now = Math.floor(Date.now() / 1000);
+                const originalExpiryTs = now + 3600;
+                const newExpiryTs = now + 7200;
 
-            // Revoke the attestation
-            await program.methods
-                .revokeAttestation()
-                .accountsPartial({
-                    config: await setupConfig(admin),
-                    admin: admin.publicKey,
-                    subject: subject,
-                    loan: loan,
-                    score: scorePda,
-                })
-                .signers([admin])
-                .rpc();
+                // Create score attestation
+                const { scorePda } = await createScoreAttestation(
+                    admin,
+                    subject,
+                    loan,
+                    750,
+                    3,
+                    500,
+                    1000,
+                    originalExpiryTs
+                );
 
-            // Verify it's revoked
-            let score = await program.account.scoreAttestation.fetch(scorePda);
-            expect(score.revoked).to.be.true;
+                // Revoke the attestation
+                await program.methods
+                    .revokeAttestation()
+                    .accountsPartial({
+                        config: await setupConfig(admin),
+                        admin: admin.publicKey,
+                        subject: subject,
+                        loan: loan,
+                        score: scorePda,
+                    })
+                    .signers([admin])
+                    .rpc();
 
-            // Update expiry (should still work even if revoked)
-            await program.methods
-                .updateAttestationExpiry(new BN(newExpiryTs))
-                .accountsPartial({
-                    config: await setupConfig(admin),
-                    admin: admin.publicKey,
-                    subject: subject,
-                    loan: loan,
-                    score: scorePda,
-                })
-                .signers([admin])
-                .rpc();
+                // Verify it's revoked
+                let score = await program.account.scoreAttestation.fetch(scorePda);
+                expect(score.revoked).to.be.true;
 
-            // Verify expiry was updated and still revoked
-            score = await program.account.scoreAttestation.fetch(scorePda);
-            expect(score.expiryTs.toNumber()).to.equal(newExpiryTs);
-            expect(score.revoked).to.be.true;
-        });
-    });
+                // Update expiry (should still work even if revoked)
+                await program.methods
+                    .updateAttestationExpiry(new BN(newExpiryTs))
+                    .accountsPartial({
+                        config: await setupConfig(admin),
+                        admin: admin.publicKey,
+                        subject: subject,
+                        loan: loan,
+                        score: scorePda,
+                    })
+                    .signers([admin])
+                    .rpc();
+
+                // Verify expiry was updated and still revoked
+                score = await program.account.scoreAttestation.fetch(scorePda);
+                expect(score.expiryTs.toNumber()).to.equal(newExpiryTs);
+                expect(score.revoked).to.be.true;
+            });
+        })
+    })
 });

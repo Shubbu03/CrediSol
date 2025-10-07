@@ -14,7 +14,7 @@ use anchor_lang::prelude::*;
 pub struct AdminOnly<'info> {
     #[account(
         mut,
-        seeds = [b"score_config", admin.key().as_ref()],
+        seeds = [b"score_config"],
         bump = config.bump,
         has_one = admin
     )]
@@ -38,14 +38,12 @@ impl<'info> AdminOnly<'info> {
 
     pub fn add_oracle(&mut self, oracle: Pubkey) -> Result<()> {
         require!(!self.config.paused, ScoreAttestorError::Paused);
-        require!(
-            self.config.oracles.len() < MAX_ORACLES,
-            ScoreAttestorError::TooManyOracles
-        );
+        require!(self.config.oracles.len() < MAX_ORACLES, ScoreAttestorError::TooManyOracles);
         require!(
             !self.config.oracles.iter().any(|o| *o == oracle),
             ScoreAttestorError::OracleExists
         );
+
         self.config.oracles.push(oracle);
         emit!(OracleAdded { oracle });
         Ok(())
@@ -53,12 +51,11 @@ impl<'info> AdminOnly<'info> {
 
     pub fn remove_oracle(&mut self, oracle: Pubkey) -> Result<()> {
         require!(!self.config.paused, ScoreAttestorError::Paused);
+
         let before = self.config.oracles.len();
         self.config.oracles.retain(|o| *o != oracle);
-        require!(
-            self.config.oracles.len() < before,
-            ScoreAttestorError::OracleNotFound
-        );
+        require!(self.config.oracles.len() < before, ScoreAttestorError::OracleNotFound);
+
         emit!(OracleRemoved { oracle });
         Ok(())
     }
@@ -70,16 +67,16 @@ impl<'info> AdminOnly<'info> {
             (new_threshold as usize) <= self.config.oracles.len(),
             ScoreAttestorError::InvalidParam
         );
+
         self.config.oracle_threshold = new_threshold;
-        emit!(OracleThresholdSet {
-            oracle_threshold: new_threshold
-        });
+        emit!(OracleThresholdSet { oracle_threshold: new_threshold });
         Ok(())
     }
 
     pub fn set_max_staleness(&mut self, max_staleness_secs: i64) -> Result<()> {
         require!(!self.config.paused, ScoreAttestorError::Paused);
         require!(max_staleness_secs > 0, ScoreAttestorError::InvalidParam);
+
         self.config.max_staleness_secs = max_staleness_secs;
         emit!(MaxStalenessSet { max_staleness_secs });
         Ok(())
@@ -87,10 +84,7 @@ impl<'info> AdminOnly<'info> {
 
     pub fn add_model(&mut self, model_id: ModelId, version: u16) -> Result<()> {
         require!(!self.config.paused, ScoreAttestorError::Paused);
-        require!(
-            self.config.models.len() < MAX_MODELS,
-            ScoreAttestorError::TooManyModels
-        );
+        require!(self.config.models.len() < MAX_MODELS, ScoreAttestorError::TooManyModels);
         require!(
             !self
                 .config
@@ -100,22 +94,14 @@ impl<'info> AdminOnly<'info> {
             ScoreAttestorError::ModelExists
         );
 
-        self.config.models.push(ModelKey {
-            model_id,
-            version,
-            enabled: true,
-        });
+        self.config.models.push(ModelKey { model_id, version, enabled: true });
         emit!(ModelAdded { model_id, version });
         Ok(())
     }
 
-    pub fn set_model_status(
-        &mut self,
-        model_id: ModelId,
-        version: u16,
-        enabled: bool,
-    ) -> Result<()> {
+    pub fn set_model_status(&mut self, model_id: ModelId, version: u16, enabled: bool) -> Result<()> {
         require!(!self.config.paused, ScoreAttestorError::Paused);
+
         let mut found = false;
         for m in self.config.models.iter_mut() {
             if m.model_id == model_id && m.version == version {
@@ -125,11 +111,8 @@ impl<'info> AdminOnly<'info> {
             }
         }
         require!(found, ScoreAttestorError::ModelNotFound);
-        emit!(ModelStatusSet {
-            model_id,
-            version,
-            enabled
-        });
+
+        emit!(ModelStatusSet { model_id, version, enabled });
         Ok(())
     }
 }
