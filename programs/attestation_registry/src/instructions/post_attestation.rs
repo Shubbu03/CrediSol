@@ -30,7 +30,7 @@ pub struct PostAttestation<'info> {
         ],
         bump
     )]
-    pub attestation: Account<'info, Attestation>,
+    pub attestation: Account<'info, Attestation>,    
 
     pub issuer: Signer<'info>,
 

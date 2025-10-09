@@ -18,7 +18,7 @@ declare_id!("AQ4NQuyNkn9cmDmNpc3HzepHahPM8fWP255pHqrzWPBr");
 pub mod attestation_registry {
     use super::*;
 
-    pub fn initialize_config(ctx: Context<InitConfig>, max_expiry: u64) -> Result<()> {
+    pub fn initialize_config(ctx: Context<InitializeConfig>, max_expiry: u64) -> Result<()> {
         let bump = ctx.bumps.config;
         ctx.accounts.initialize_config(max_expiry.try_into().unwrap(), bump)
     }
@@ -51,10 +51,15 @@ pub mod attestation_registry {
         ctx.accounts.set_admin(new_admin)
     }
 
-    pub fn post_attestation(ctx: Context<PostAttestation>, data: [u8; 32], schema: SchemaType, expiry: i64) -> Result<()> {
-        let bump = ctx.bumps.attestation;
-        ctx.accounts.post_attestation(schema, data, expiry, bump)
-    }
+    pub fn post_attestation(
+        ctx: Context<PostAttestation>,
+        claim_hash: [u8; 32],
+        schema_id: SchemaType,
+        expiry: i64,
+        bump: u8,
+    ) -> Result<()> {
+        ctx.accounts.post_attestation(schema_id, claim_hash, expiry, bump)
+    }    
 
     pub fn revoke_attestation(ctx: Context<RevokeAttestation>) -> Result<()> {
         ctx.accounts.revoke_attestation()
