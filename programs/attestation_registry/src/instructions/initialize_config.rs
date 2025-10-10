@@ -7,8 +7,8 @@ pub struct InitializeConfig<'info> {
     #[account(
         init,
         payer = admin,
-        space = ANCHOR_DISCRIMINATOR + Config::INIT_SPACE,
         seeds = [b"attest_config"],
+        space = ANCHOR_DISCRIMINATOR + Config::INIT_SPACE,
         bump
     )]
     pub config: Account<'info, Config>,
@@ -24,7 +24,7 @@ impl<'info> InitializeConfig<'info> {
     pub fn initialize_config(&mut self, max_expiry_secs: i64, bump: u8) -> Result<()> {
         let config: &mut Account<'info, Config> = &mut self.config;
         config.admin = self.admin.key();
-        config.max_expiry_secs = max_expiry_secs;
+        config.max_expiry_secs = max_expiry_secs; // How long attestations can last
         config.paused = false;
         config.bump = bump;
 

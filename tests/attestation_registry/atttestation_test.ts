@@ -201,11 +201,11 @@ describe("attestation_registry", () => {
         const subject = anchor.web3.Keypair.generate();
         const issuer = anchor.web3.Keypair.generate();
         const payer = anchor.web3.Keypair.generate();
-    
+
         await airdrop(subject.publicKey);
         await airdrop(issuer.publicKey);
         await airdrop(payer.publicKey);
-    
+
         await program.methods
             .addIssuer(issuer.publicKey)
             .accounts({
@@ -214,13 +214,13 @@ describe("attestation_registry", () => {
             })
             .signers([admin])
             .rpc();
-    
+
         const schemaIdNumber = 0;
         const schemaId = { identityVerified: {} };
         const claimHash = Array(32).fill(1);
         const expiry = new anchor.BN(Math.floor(Date.now() / 1000) + 1800);
-    
-        const [attestationPda, attestationBump] =
+
+        const [attestationPda, _attestationBump] =
             anchor.web3.PublicKey.findProgramAddressSync(
                 [
                     Buffer.from("attest"),
@@ -230,9 +230,9 @@ describe("attestation_registry", () => {
                 ],
                 program.programId
             );
-    
+
         await program.methods
-            .postAttestation(claimHash, schemaId, expiry, attestationBump)
+            .postAttestation(claimHash, schemaId, expiry)
             .accountsStrict({
                 config: configPda,
                 subject: subject.publicKey,
@@ -243,9 +243,17 @@ describe("attestation_registry", () => {
             })
             .signers([issuer, payer])
             .rpc();
-    
+
+        console.log('Attestation created');
+
+        // Fetch to verify
+        const attestationAccount = await program.account.attestation.fetch(attestationPda);
+        console.log('Schema ID:', attestationAccount.schemaId);
+        console.log('Schema number:', schemaEnumToNumber(attestationAccount.schemaId));
+
         const newExpiry = Math.floor(Date.now() / 1000) + 3600;
-    
+
+        // Use the same PDA
         await program.methods
             .updateExpiry(new anchor.BN(newExpiry))
             .accountsStrict({
@@ -256,8 +264,19 @@ describe("attestation_registry", () => {
             })
             .signers([issuer])
             .rpc();
-    
-        const attestation = await program.account.attestation.fetch(attestationPda);
-        expect(attestation.expiryTs.toNumber()).to.eq(newExpiry);
+
+        const updatedAttestation = await program.account.attestation.fetch(attestationPda);
+        expect(updatedAttestation.expiryTs.toNumber()).to.eq(newExpiry);
     });
 });
+
+function schemaEnumToNumber(schema: any): number {
+    if ("identityVerified" in schema) return 0;
+    if ("uniqueness" in schema) return 1;
+    if ("sanctionsClear" in schema) return 2;
+    if ("incomeBand" in schema) return 3;
+    if ("creditHistory" in schema) return 4;
+    if ("employmentStatus" in schema) return 5;
+    if ("custom" in schema) return 255;
+    throw new Error("Unknown schema type");
+}

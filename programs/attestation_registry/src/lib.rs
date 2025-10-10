@@ -18,7 +18,7 @@ declare_id!("AQ4NQuyNkn9cmDmNpc3HzepHahPM8fWP255pHqrzWPBr");
 pub mod attestation_registry {
     use super::*;
 
-    pub fn initialize_config(ctx: Context<InitConfig>, max_expiry: u64) -> Result<()> {
+    pub fn initialize_config(ctx: Context<InitializeConfig>, max_expiry: u64) -> Result<()> {
         let bump = ctx.bumps.config;
         ctx.accounts.initialize_config(max_expiry.try_into().unwrap(), bump)
     }
