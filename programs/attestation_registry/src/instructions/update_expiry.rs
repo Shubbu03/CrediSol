@@ -33,6 +33,21 @@ pub struct UpdateExpiry<'info> {
     pub signer: Signer<'info>,
 }
 
+/*
+    subject = Alice’s wallet pubkey
+    issuer = a KYC provider
+    schema_id = SchemaType::IdentityVerified
+    expiry_ts = 1738953600 (some future timestamp)
+
+    The KYC provider verifies that Alice's identity has been verified, valid until this timestamp.
+
+    why updating expiry_ts?
+        Over time, attestations can expire, meaning the verification is no longer valid.
+        For example:
+            KYC checks might expire every 6 months.
+            Sanctions lists or credit reports need to be refreshed periodically.
+            Some attestations might get extended after revalidation.
+*/
 impl<'info> UpdateExpiry<'info> {
     pub fn update_expiry(&mut self, new_expiry_ts: i64) -> Result<()> {
         let config = &self.config;

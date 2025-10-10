@@ -1,4 +1,4 @@
-pub mod init_config;
+pub mod initialize_config;
 pub mod manage_issuer;
 pub mod post_attestation;
 pub mod manage_schema;
@@ -8,7 +8,7 @@ pub mod set_paused;
 pub mod set_admin;
 pub mod update_expiry;
 
-pub use init_config::*;
+pub use initialize_config::*;
 pub use manage_issuer::*;
 pub use post_attestation::*;
 pub use manage_schema::*;
