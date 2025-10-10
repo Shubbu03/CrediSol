@@ -20,7 +20,8 @@ pub mod attestation_registry {
 
     pub fn initialize_config(ctx: Context<InitializeConfig>, max_expiry: u64) -> Result<()> {
         let bump = ctx.bumps.config;
-        ctx.accounts.initialize_config(max_expiry.try_into().unwrap(), bump)
+        ctx.accounts
+            .initialize_config(max_expiry.try_into().unwrap(), bump)
     }
 
     pub fn add_issuer(ctx: Context<ManageIssuer>, issuer: Pubkey) -> Result<()> {
@@ -31,7 +32,11 @@ pub mod attestation_registry {
         ctx.accounts.remove_issuer(issuer)
     }
 
-    pub fn set_issuer_status(ctx: Context<ManageIssuer>, issuer: Pubkey, enabled: bool) -> Result<()> {
+    pub fn set_issuer_status(
+        ctx: Context<ManageIssuer>,
+        issuer: Pubkey,
+        enabled: bool,
+    ) -> Result<()> {
         ctx.accounts.set_issuer_status(issuer, enabled)
     }
 
@@ -53,13 +58,14 @@ pub mod attestation_registry {
 
     pub fn post_attestation(
         ctx: Context<PostAttestation>,
-        claim_hash: [u8; 32],
         schema_id: SchemaType,
+        claim_hash: [u8; 32],
         expiry: i64,
         bump: u8,
     ) -> Result<()> {
-        ctx.accounts.post_attestation(schema_id, claim_hash, expiry, bump)
-    }    
+        ctx.accounts
+            .post_attestation(schema_id, claim_hash, expiry, bump)
+    }
 
     pub fn revoke_attestation(ctx: Context<RevokeAttestation>) -> Result<()> {
         ctx.accounts.revoke_attestation()

@@ -231,7 +231,7 @@ describe("score_attestor — admin_score", () => {
             const logs = await provider.connection.getParsedTransaction(tx, { commitment: 'confirmed' });
             const logMessages = logs?.meta?.logMessages || [];
             const hasRevokeEvent = logMessages.some((log: string) =>
-                log.includes('ScoreRevoked') || log.includes('Program data:')
+                log.includes('Program data:')
             );
             expect(hasRevokeEvent).to.be.true;
         });
@@ -370,7 +370,7 @@ describe("score_attestor — admin_score", () => {
             const logs = await provider.connection.getParsedTransaction(tx, { commitment: 'confirmed' });
             const logMessages = logs?.meta?.logMessages || [];
             const hasExpiryEvent = logMessages.some((log: string) =>
-                log.includes('ScoreExpiryUpdated') || log.includes('Program data:')
+                log.includes('Program data:')
             );
             expect(hasExpiryEvent).to.be.true;
         });

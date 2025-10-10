@@ -232,7 +232,7 @@ describe("attestation_registry", () => {
             );
 
         await program.methods
-            .postAttestation(claimHash, schemaId, expiry)
+            .postAttestation(schemaId, claimHash, expiry, _attestationBump)
             .accountsStrict({
                 config: configPda,
                 subject: subject.publicKey,
