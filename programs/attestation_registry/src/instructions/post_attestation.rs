@@ -1,9 +1,15 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{
+    prelude::*,
+    solana_program::{secp256k1_recover::secp256k1_recover},
+};
+// use ed25519_dalek::{Signature, Verifier};
+// use ethsign::{Protected, KeyFile};
 
 use crate::{
     error::AttestationRegistryError,
     event::AttestationPosted,
     state::{Attestation, Config, SchemaType},
+    IssuerType,
 };
 
 #[derive(Accounts)]
@@ -15,7 +21,13 @@ pub struct PostAttestation<'info> {
     )]
     pub config: Account<'info, Config>,
 
-    /// CHECK: Subject identity (pubkey only, no PII)
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    /// CHECK: Ethereum address mapped to a 32-byte Pubkey; does NOT sign
+    pub issuer: UncheckedAccount<'info>,
+
+    /// CHECK: subject may or may not be a Signer depending on your policy
     pub subject: UncheckedAccount<'info>,
 
     #[account(
@@ -30,12 +42,7 @@ pub struct PostAttestation<'info> {
         ],
         bump
     )]
-    pub attestation: Account<'info, Attestation>,    
-
-    pub issuer: Signer<'info>,
-
-    #[account(mut)]
-    pub payer: Signer<'info>,
+    pub attestation: Account<'info, Attestation>,
 
     pub system_program: Program<'info, System>,
 }
@@ -46,6 +53,9 @@ impl<'info> PostAttestation<'info> {
         schema_id: SchemaType,
         claim_hash: [u8; 32],
         expiry_ts: i64,
+        signature_bytes: [u8; 64],
+        recover_id: u8,
+        allocator_from_proof: [u8; 65],
         bump: u8,
     ) -> Result<()> {
         let config = &self.config;
@@ -79,6 +89,23 @@ impl<'info> PostAttestation<'info> {
             AttestationRegistryError::ExpiryTooFar
         );
 
+        match issuer_entry.issuer_type {
+            IssuerType::Ethereum => {
+                Self::verify_eth_sig(
+                    &allocator_from_proof,
+                    &signature_bytes,
+                    recover_id,
+                    &claim_hash,
+                )?;
+            }
+            IssuerType::Solana => {
+                require!(
+                    signature_bytes.len() == 64,
+                    AttestationRegistryError::InvalidSignature
+                );
+            }
+        }
+
         attestation.subject = self.subject.key();
         attestation.schema_id = schema_id;
         attestation.claim_hash = claim_hash;
@@ -98,4 +125,24 @@ impl<'info> PostAttestation<'info> {
 
         Ok(())
     }
+
+    fn verify_eth_sig(
+        expected_address: &[u8; 65],
+        signature_bytes: &[u8; 64],
+        recover_id: u8,
+        message_hash: &[u8; 32],
+    ) -> Result<()> {
+        let recovered_pubkey = secp256k1_recover(message_hash, recover_id, signature_bytes)
+            .map_err(|_| AttestationRegistryError::InvalidSignature)?;
+        let mut full_pubkey = vec![4u8];
+
+        full_pubkey.extend_from_slice(&recovered_pubkey.to_bytes());
+
+        require!(
+            full_pubkey == expected_address,
+            AttestationRegistryError::InvalidSignature
+        );
+    
+        Ok(())
+    } 
 }

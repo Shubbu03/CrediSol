@@ -24,8 +24,8 @@ pub mod attestation_registry {
             .initialize_config(max_expiry.try_into().unwrap(), bump)
     }
 
-    pub fn add_issuer(ctx: Context<ManageIssuer>, issuer: Pubkey) -> Result<()> {
-        ctx.accounts.add_issuer(issuer)
+    pub fn add_issuer(ctx: Context<ManageIssuer>, issuer: Pubkey, issuer_type: IssuerType) -> Result<()> {
+        ctx.accounts.add_issuer(issuer, issuer_type)
     }
 
     pub fn remove_issuer(ctx: Context<ManageIssuer>, issuer: Pubkey) -> Result<()> {
@@ -60,13 +60,23 @@ pub mod attestation_registry {
         ctx: Context<PostAttestation>,
         schema_id: SchemaType,
         claim_hash: [u8; 32],
-        expiry: i64,
+        expiry_ts: i64,
+        signature_bytes: [u8; 64],
+        recover_id: u8,
+        allocator_from_proof: [u8; 65],
         bump: u8,
     ) -> Result<()> {
-        ctx.accounts
-            .post_attestation(schema_id, claim_hash, expiry, bump)
+        ctx.accounts.post_attestation(
+            schema_id,
+            claim_hash,
+            expiry_ts,
+            signature_bytes,
+            recover_id,
+            allocator_from_proof,
+            bump,
+        )
     }
-
+    
     pub fn revoke_attestation(ctx: Context<RevokeAttestation>) -> Result<()> {
         ctx.accounts.revoke_attestation()
     }

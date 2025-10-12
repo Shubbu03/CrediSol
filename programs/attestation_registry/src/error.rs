@@ -1,4 +1,4 @@
-use anchor_lang::prelude::error_code;
+use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum AttestationRegistryError {
@@ -20,6 +20,9 @@ pub enum AttestationRegistryError {
     #[msg("Schema not allowed")]
     SchemaNotAllowed,
 
+    #[msg("Schema not found")]
+    SchemaNotFound,
+
     #[msg("Schema already exists")]
     SchemaAlreadyExists,
 
@@ -40,4 +43,13 @@ pub enum AttestationRegistryError {
 
     #[msg("Invalid admin address")]
     InvalidAdmin,
+
+    #[msg("Invalid signature")]
+    InvalidSignature,
+
+    #[msg("Unsupported issuer type")]
+    UnsupportedIssuerType,
+
+    #[msg("Invalid Public Key")]
+    InvalidPublicKey,
 }

@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    error::AttestationRegistryError, event::IssuerAdded, event::IssuerRemoved,
-    event::IssuerStatusChanged, state::Config, state::Issuer,
+    error::AttestationRegistryError, event::{IssuerAdded, IssuerRemoved, IssuerStatusChanged}, state::{Config, Issuer}, IssuerType,
 };
 
 #[derive(Accounts)]
@@ -19,7 +18,7 @@ pub struct ManageIssuer<'info> {
 }
 
 impl<'info> ManageIssuer<'info> {
-    pub fn add_issuer(&mut self, issuer: Pubkey) -> Result<()> {
+    pub fn add_issuer(&mut self, issuer: Pubkey, issuer_type: IssuerType) -> Result<()> {
         let config = &mut self.config;
 
         require!(!config.paused, AttestationRegistryError::Paused);
@@ -34,6 +33,7 @@ impl<'info> ManageIssuer<'info> {
 
         config.issuers.push(Issuer {
             pubkey: issuer,
+            issuer_type,
             enabled: true,
         });
 
