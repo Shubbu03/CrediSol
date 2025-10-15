@@ -1,0 +1,1 @@
+hardcode the allocator address to the contract, else people be sending random hashes
