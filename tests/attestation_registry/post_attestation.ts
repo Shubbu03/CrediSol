@@ -2,7 +2,6 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { AttestationRegistry } from "../../target/types/attestation_registry";
 import { PublicKey } from "@solana/web3.js";
-import { ethers } from "ethers";
 import { BN } from "bn.js";
 import { expect } from "chai";
 
@@ -39,10 +38,6 @@ function hexToBytes(hex: string): Uint8Array {
     return Uint8Array.from(Buffer.from(hex.replace(/^0x/, ""), "hex"));
 }
 
-function bytesToHex(bytes: Uint8Array | Buffer): string {
-    return Buffer.from(bytes).toString("hex");
-}
-
 describe("attestation_registry", () => {
     const provider = anchor.AnchorProvider.local();
     anchor.setProvider(provider);
@@ -51,7 +46,8 @@ describe("attestation_registry", () => {
     let admin: anchor.web3.Keypair;
     let configPda: anchor.web3.PublicKey;
     let configBump: number;
-    let issuerPubkey: PublicKey;
+    let zkPassIssuerPubkey: PublicKey;
+    let plaidIssuerPubkey: PublicKey;
 
     async function airdrop(pubkey: PublicKey, sol = 2) {
         const sig = await provider.connection.requestAirdrop(pubkey, sol * anchor.web3.LAMPORTS_PER_SOL);
@@ -82,10 +78,10 @@ describe("attestation_registry", () => {
         const allocatorAddress = "0x19a567b3b212a5b35bA0E3B600FbEd5c2eE9083d";
         const ethAddressBytes1 = Buffer.from(allocatorAddress.slice(2), "hex");
         const padded1 = Buffer.concat([Buffer.alloc(12), ethAddressBytes1]); // 32 bytes
-        issuerPubkey = new anchor.web3.PublicKey(padded1);
+        zkPassIssuerPubkey = new anchor.web3.PublicKey(padded1);
 
         await program.methods
-            .addIssuer(issuerPubkey, { ethereum: {} })
+            .addIssuer(zkPassIssuerPubkey, { ethereum: {} })
             .accounts({
                 config: configPda,
                 admin: admin.publicKey,
@@ -96,10 +92,10 @@ describe("attestation_registry", () => {
         const reclaimOwner = "0x7af75fb20c6a3ad403c568430f3cab891c961191";
         const ethAddressBytes = Buffer.from(reclaimOwner.slice(2), "hex");
         const padded = Buffer.concat([Buffer.alloc(12), ethAddressBytes]); // pad to 32 bytes
-        issuerPubkey = new anchor.web3.PublicKey(padded);
+        plaidIssuerPubkey = new anchor.web3.PublicKey(padded);
 
         await program.methods
-            .addIssuer(issuerPubkey, { ethereum: {} })
+            .addIssuer(plaidIssuerPubkey, { ethereum: {} })
             .accounts({
                 config: configPda,
                 admin: admin.publicKey,
@@ -155,13 +151,13 @@ describe("attestation_registry", () => {
 
         const now = Math.floor(Date.now() / 1000);
         const expiryTs = now + 3500; // < 3600, safe
-        const schemaIdIndex = 0;
+        const schemaIdIndex = 1;
         const [attestationPda] = anchor.web3.PublicKey.findProgramAddressSync(
             [
                 Buffer.from("attest"),
                 subject.publicKey.toBuffer(),
                 Buffer.from([schemaIdIndex]),
-                issuerPubkey.toBuffer(),
+                zkPassIssuerPubkey.toBuffer(),
             ],
             program.programId
         );
@@ -169,7 +165,7 @@ describe("attestation_registry", () => {
         await airdrop(subject.publicKey)
         await program.methods
             .postAttestation(
-                { identityVerified: {} },
+                { zkPassIdentity: {} },
                 Array.from(plaintextHash),
                 new BN(expiryTs),
                 Array.from(signatureBytes),
@@ -181,7 +177,7 @@ describe("attestation_registry", () => {
                 config: configPda,
                 subject: subject.publicKey,
                 attestation: attestationPda,
-                issuer: issuerPubkey,
+                issuer: zkPassIssuerPubkey,
                 payer: subject.publicKey,
                 systemProgram: anchor.web3.SystemProgram.programId,
             })
@@ -258,20 +254,20 @@ describe("attestation_registry", () => {
 
         const now = Math.floor(Date.now() / 1000);
         const expiryTs = now + 3500;
-        const schemaIdIndex = 0;
+        const schemaIdIndex = 4;
         const [attestationPda] = anchor.web3.PublicKey.findProgramAddressSync(
             [
                 Buffer.from("attest"),
                 subject.publicKey.toBuffer(),
                 Buffer.from([schemaIdIndex]),
-                issuerPubkey.toBuffer(),
+                plaidIssuerPubkey.toBuffer(),
             ],
             program.programId
         );
 
         await program.methods
             .postAttestation(
-                { identityVerified: {} },
+                { plaidIncome: {} },
                 Array.from(plaintextHash),
                 new BN(expiryTs),
                 Array.from(signatureBytes),
@@ -283,7 +279,7 @@ describe("attestation_registry", () => {
                 config: configPda,
                 subject: subject.publicKey,
                 attestation: attestationPda,
-                issuer: issuerPubkey,
+                issuer: plaidIssuerPubkey,
                 payer: subject.publicKey,
                 systemProgram: anchor.web3.SystemProgram.programId,
             })

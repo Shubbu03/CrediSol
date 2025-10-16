@@ -28,10 +28,11 @@ impl<'info> InitializeConfig<'info> {
         config.paused = false;
         config.bump = bump;
 
-        config.schemas.push(SchemaType::IdentityVerified);
+        config.schemas.push(SchemaType::AnonAadhaar);
+        config.schemas.push(SchemaType::ZkPassIdentity);
         config.schemas.push(SchemaType::Uniqueness);
-        config.schemas.push(SchemaType::SanctionsClear);
-        config.schemas.push(SchemaType::IncomeBand);
+        config.schemas.push(SchemaType::CreditKarmaScore);
+        config.schemas.push(SchemaType::PlaidIncome);
 
         emit!(ConfigInitialized {
             admin: config.admin,
