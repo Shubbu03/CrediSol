@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --border: #e5e5e5;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --accent: #ec4899;
+  --accent-foreground: #ffffff;
+  --gradient-primary: 140deg;
+  --gradient-from: #7c3aed;
+  --gradient-to: #3b82f6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --border: #2a2a2a;
+  --muted: #1a1a1a;
+  --muted-foreground: #a0a0a0;
+  --primary: #a78bfa;
+  --primary-foreground: #0a0a0a;
+  --accent: #f472b6;
+  --accent-foreground: #0a0a0a;
+  --gradient-from: #a78bfa;
+  --gradient-to: #60a5fa;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.wallet-button-wrapper {
+  display: flex;
+}
+
+/* Responsive adjustments for wallet button */
+@media (max-width: 640px) {
+  .wallet-button-wrapper button {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .wallet-button-wrapper {
+    width: 100%;
+    max-width: 150px;
+  }
+}
+
+@media (min-width: 641px) {
+  .wallet-button-wrapper button {
+    padding: 0.5rem 1.5rem !important;
+  }
+}
