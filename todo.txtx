@@ -1,1 +1,2 @@
 hardcode the allocator address to the contract, else people be sending random hashes
+ig this isn't required considering we're doing the init_config first, therefore people sending random hashes fail
