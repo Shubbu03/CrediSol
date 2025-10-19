@@ -131,7 +131,6 @@ export default function HowItWorks() {
             className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-background"
         >
             <div className="max-w-7xl mx-auto">
-                {/* Section Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -146,7 +145,6 @@ export default function HowItWorks() {
                         Choose your role and see the step-by-step process
                     </p>
 
-                    {/* Role Toggle */}
                     <div className="flex justify-center">
                         <div className="bg-muted/50 rounded-lg p-1 flex">
                             <button
@@ -173,7 +171,6 @@ export default function HowItWorks() {
                     </div>
                 </motion.div>
 
-                {/* Steps */}
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeRole}
@@ -183,7 +180,6 @@ export default function HowItWorks() {
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
                     >
-                        {/* Connecting Line */}
                         <div className="hidden md:block absolute top-8 left-0 right-0 h-1 z-0">
                             <motion.div
                                 className="h-full bg-gradient-to-r from-violet-500/30 via-blue-500/30 to-emerald-500/30"
@@ -207,15 +203,14 @@ export default function HowItWorks() {
                                     onMouseEnter={() => setHoveredStep(index)}
                                     onMouseLeave={() => setHoveredStep(null)}
                                 >
-                                    {/* Step Number Badge - Desktop */}
                                     <motion.div
                                         className="hidden md:flex absolute -top-4 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full items-center justify-center border-4 border-background shadow-lg z-10"
-                                        style={{ 
-                                            background: step.color.includes('violet') 
-                                                ? 'linear-gradient(135deg, #7c3aed, #3b82f6)' 
-                                                : step.color.includes('blue') 
-                                                ? 'linear-gradient(135deg, #3b82f6, #10b981)' 
-                                                : 'linear-gradient(135deg, #10b981, #7c3aed)'
+                                        style={{
+                                            background: step.color.includes('violet')
+                                                ? 'linear-gradient(135deg, #7c3aed, #3b82f6)'
+                                                : step.color.includes('blue')
+                                                    ? 'linear-gradient(135deg, #3b82f6, #10b981)'
+                                                    : 'linear-gradient(135deg, #10b981, #7c3aed)'
                                         }}
                                         whileHover={{ scale: 1.1, rotate: 5 }}
                                         transition={{ duration: 0.3 }}
@@ -223,16 +218,15 @@ export default function HowItWorks() {
                                         <Icon className="w-8 h-8 text-white" />
                                     </motion.div>
 
-                                    {/* Mobile Header */}
                                     <div className="md:hidden mb-4 flex items-center gap-3">
-                                        <div 
+                                        <div
                                             className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
-                                            style={{ 
-                                                background: step.color.includes('violet') 
-                                                    ? 'linear-gradient(135deg, #7c3aed, #3b82f6)' 
-                                                    : step.color.includes('blue') 
-                                                    ? 'linear-gradient(135deg, #3b82f6, #10b981)' 
-                                                    : 'linear-gradient(135deg, #10b981, #7c3aed)'
+                                            style={{
+                                                background: step.color.includes('violet')
+                                                    ? 'linear-gradient(135deg, #7c3aed, #3b82f6)'
+                                                    : step.color.includes('blue')
+                                                        ? 'linear-gradient(135deg, #3b82f6, #10b981)'
+                                                        : 'linear-gradient(135deg, #10b981, #7c3aed)'
                                             }}
                                         >
                                             {step.number}
@@ -244,9 +238,8 @@ export default function HowItWorks() {
 
                                     <div className="md:pt-16">
                                         <motion.div
-                                            className={`bg-background border border-border/40 rounded-xl p-6 transition-all duration-300 ${
-                                                isHovered ? 'shadow-xl shadow-violet-500/10 border-violet-500/30' : ''
-                                            }`}
+                                            className={`bg-background border border-border/40 rounded-xl p-6 transition-all duration-300 ${isHovered ? 'shadow-xl shadow-violet-500/10 border-violet-500/30' : ''
+                                                }`}
                                             whileHover={{ y: -4 }}
                                         >
                                             <div className="flex items-center gap-3 mb-3">
@@ -266,7 +259,6 @@ export default function HowItWorks() {
                                                 {step.description}
                                             </p>
 
-                                            {/* Expandable Details */}
                                             <AnimatePresence>
                                                 {isHovered && (
                                                     <motion.div
@@ -303,7 +295,6 @@ export default function HowItWorks() {
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Bottom CTA */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
