@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useUserRole } from "../../hooks/use-user-role";
+import { useAnimationStore } from "../../stores/animation-store";
 
 interface Transaction {
     id: string;
@@ -18,14 +19,8 @@ export default function Hero() {
     const router = useRouter();
     const { connected } = useWallet();
     const { role, onboarded } = useUserRole();
-    const [stats, setStats] = useState({
-        totalVolume: 0,
-        activeLoans: 0,
-        lenders: 0,
-        avgApy: 0,
-    });
 
-    const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+    const { stats, recentTransactions, animateStats, generateTransactions } = useAnimationStore();
 
     const { scrollY } = useScroll();
     const y1 = useTransform(scrollY, [0, 300], [0, 50]);
@@ -33,61 +28,9 @@ export default function Hero() {
     const opacity = useTransform(scrollY, [0, 200], [1, 0]);
 
     useEffect(() => {
-        const targetStats = {
-            totalVolume: 12470000,
-            activeLoans: 2847,
-            lenders: 1243,
-            avgApy: 12.4,
-        };
-
-        const duration = 2000;
-        const steps = 60;
-        const stepDuration = duration / steps;
-
-        let currentStep = 0;
-        const interval = setInterval(() => {
-            currentStep++;
-            const progress = currentStep / steps;
-
-            setStats({
-                totalVolume: Math.floor(targetStats.totalVolume * progress),
-                activeLoans: Math.floor(targetStats.activeLoans * progress),
-                lenders: Math.floor(targetStats.lenders * progress),
-                avgApy: Number((targetStats.avgApy * progress).toFixed(1)),
-            });
-
-            if (currentStep >= steps) {
-                clearInterval(interval);
-                setStats(targetStats);
-            }
-        }, stepDuration);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        const generateTransaction = (): Transaction => ({
-            id: Math.random().toString(36).substr(2, 9),
-            amount: Math.floor(Math.random() * 50000) + 1000,
-            type: Math.random() > 0.5 ? "borrow" : "lend",
-            time: "Just now",
-        });
-
-        setRecentTransactions([
-            generateTransaction(),
-            generateTransaction(),
-            generateTransaction(),
-        ]);
-
-        const interval = setInterval(() => {
-            setRecentTransactions((prev) => {
-                const newTx = generateTransaction();
-                return [newTx, ...prev.slice(0, 2)];
-            });
-        }, 5000);
-
-        return () => clearInterval(interval);
-    }, []);
+        animateStats();
+        generateTransactions();
+    }, [animateStats, generateTransactions]);
 
     const containerVariants = {
         hidden: { opacity: 0 },

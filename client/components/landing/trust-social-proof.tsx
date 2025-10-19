@@ -5,7 +5,6 @@ import {
     Shield,
     TrendingUp,
     Users,
-    Clock,
     CheckCircle,
     Star,
     Award,
@@ -13,63 +12,16 @@ import {
     DollarSign,
     Lock,
     Activity,
-    BarChart3
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useAnimationStore } from "../../stores/animation-store";
 
 export default function TrustSocialProof() {
-    const [stats, setStats] = useState({
-        totalVolume: 0,
-        activeLoans: 0,
-        lenders: 0,
-        borrowers: 0,
-        avgApy: 0,
-        defaultRate: 0,
-        avgLoanSize: 0,
-        processingTime: 0
-    });
+    const { extendedStats, animateExtendedStats } = useAnimationStore();
 
-    // Animate stats on mount
     useEffect(() => {
-        const targetStats = {
-            totalVolume: 12470000,
-            activeLoans: 2847,
-            lenders: 1243,
-            borrowers: 1604,
-            avgApy: 12.4,
-            defaultRate: 0.8,
-            avgLoanSize: 4500,
-            processingTime: 2.3
-        };
-
-        const duration = 2500;
-        const steps = 80;
-        const stepDuration = duration / steps;
-
-        let currentStep = 0;
-        const interval = setInterval(() => {
-            currentStep++;
-            const progress = currentStep / steps;
-
-            setStats({
-                totalVolume: Math.floor(targetStats.totalVolume * progress),
-                activeLoans: Math.floor(targetStats.activeLoans * progress),
-                lenders: Math.floor(targetStats.lenders * progress),
-                borrowers: Math.floor(targetStats.borrowers * progress),
-                avgApy: Number((targetStats.avgApy * progress).toFixed(1)),
-                defaultRate: Number((targetStats.defaultRate * progress).toFixed(1)),
-                avgLoanSize: Math.floor(targetStats.avgLoanSize * progress),
-                processingTime: Number((targetStats.processingTime * progress).toFixed(1))
-            });
-
-            if (currentStep >= steps) {
-                clearInterval(interval);
-                setStats(targetStats);
-            }
-        }, stepDuration);
-
-        return () => clearInterval(interval);
-    }, []);
+        animateExtendedStats();
+    }, [animateExtendedStats]);
 
     const testimonials = [
         {
@@ -150,7 +102,6 @@ export default function TrustSocialProof() {
     return (
         <section className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-muted/20">
             <div className="max-w-7xl mx-auto">
-                {/* Section Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -166,7 +117,6 @@ export default function TrustSocialProof() {
                     </p>
                 </motion.div>
 
-                {/* Live Stats Dashboard */}
                 <motion.div
                     variants={containerVariants}
                     initial="hidden"
@@ -182,7 +132,7 @@ export default function TrustSocialProof() {
                     >
                         <DollarSign className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
                         <div className="text-2xl font-bold tabular-nums text-emerald-500">
-                            ${stats.totalVolume.toLocaleString()}
+                            ${extendedStats.totalVolume.toLocaleString()}
                         </div>
                         <div className="text-sm text-foreground/60">Total Volume</div>
                     </motion.div>
@@ -195,7 +145,7 @@ export default function TrustSocialProof() {
                     >
                         <Activity className="w-8 h-8 text-blue-500 mx-auto mb-3" />
                         <div className="text-2xl font-bold tabular-nums text-blue-500">
-                            {stats.activeLoans.toLocaleString()}
+                            {extendedStats.activeLoans.toLocaleString()}
                         </div>
                         <div className="text-sm text-foreground/60">Active Loans</div>
                     </motion.div>
@@ -208,7 +158,7 @@ export default function TrustSocialProof() {
                     >
                         <Users className="w-8 h-8 text-violet-500 mx-auto mb-3" />
                         <div className="text-2xl font-bold tabular-nums text-violet-500">
-                            {stats.lenders.toLocaleString()}
+                            {extendedStats.lenders.toLocaleString()}
                         </div>
                         <div className="text-sm text-foreground/60">Active Lenders</div>
                     </motion.div>
@@ -221,13 +171,12 @@ export default function TrustSocialProof() {
                     >
                         <TrendingUp className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
                         <div className="text-2xl font-bold tabular-nums text-emerald-500">
-                            {stats.avgApy}%
+                            {extendedStats.avgApy}%
                         </div>
                         <div className="text-sm text-foreground/60">Avg APY</div>
                     </motion.div>
                 </motion.div>
 
-                {/* Performance Metrics */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -236,23 +185,22 @@ export default function TrustSocialProof() {
                     className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
                 >
                     <div className="text-center">
-                        <div className="text-4xl font-bold text-emerald-500 mb-2">{stats.defaultRate}%</div>
+                        <div className="text-4xl font-bold text-emerald-500 mb-2">{extendedStats.defaultRate}%</div>
                         <div className="text-sm text-foreground/60">Default Rate</div>
                         <div className="text-xs text-emerald-500 mt-1">Industry leading</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-4xl font-bold text-blue-500 mb-2">{stats.processingTime}s</div>
+                        <div className="text-4xl font-bold text-blue-500 mb-2">{extendedStats.processingTime}s</div>
                         <div className="text-sm text-foreground/60">Avg Processing</div>
                         <div className="text-xs text-blue-500 mt-1">Lightning fast</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-4xl font-bold text-violet-500 mb-2">${stats.avgLoanSize.toLocaleString()}</div>
+                        <div className="text-4xl font-bold text-violet-500 mb-2">${extendedStats.avgLoanSize.toLocaleString()}</div>
                         <div className="text-sm text-foreground/60">Avg Loan Size</div>
                         <div className="text-xs text-violet-500 mt-1">Perfect range</div>
                     </div>
                 </motion.div>
 
-                {/* Testimonials */}
                 <motion.div
                     variants={containerVariants}
                     initial="hidden"
@@ -293,7 +241,6 @@ export default function TrustSocialProof() {
                     ))}
                 </motion.div>
 
-                {/* Security Features */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
