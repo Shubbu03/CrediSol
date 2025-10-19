@@ -52,8 +52,8 @@ pub mod score_attestor {
         pd_bps: u32,
         recommended_min_collateral_bps: u16,
         expiry_ts: i64,
-        signature: [u8; 64],
         message: [u8; 32],
+        signature: [u8; 64],
         recover_id: u8
     ) -> Result<()> {
         let bump = ctx.bumps.score;
@@ -69,5 +69,5 @@ pub mod score_attestor {
             signature,
             recover_id
         )
-    }    
+    }
 }

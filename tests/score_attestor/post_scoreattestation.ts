@@ -68,9 +68,9 @@ describe("score_attestor — AI scoring", () => {
                 pdBps,
                 recMinCollateralBps,
                 new BN(expiryTs),
-                [...message.slice(0, 32)],
-                [...signatureBytes.slice(0, 64)],
-                recoveryId,
+                Array.from(message),
+                Array.from(signatureBytes),
+                recoveryId
             )
             .accountsStrict({
                 config: configPda,
@@ -82,6 +82,7 @@ describe("score_attestor — AI scoring", () => {
             })
             .signers([attestor])
             .rpc();
+
 
         return { scorePda, tx };
     }
@@ -95,7 +96,6 @@ describe("score_attestor — AI scoring", () => {
         const secp256k1PubKeyCompressed = secp256k1.publicKeyCreate(secp256k1PrivKey);
 
         const secp256k1PubKey = secp256k1.publicKeyConvert(secp256k1PubKeyCompressed, false);
-        console.log("secp256k1 public:", secp256k1PubKey);
 
         const attestor = anchor.web3.Keypair.generate();
         await airdrop(attestor.publicKey, 2);
@@ -130,21 +130,24 @@ describe("score_attestor — AI scoring", () => {
 
         const vettorScore = await fetchVettorScore(subject.publicKey.toBase58());
 
+        function toBigUInt64BE(value: number | bigint): Buffer {
+            const buf = Buffer.allocUnsafe(8);
+            buf.writeBigUInt64BE(BigInt(value));
+            return buf;
+        }
+
         const messageData = Buffer.concat([
             subject.publicKey.toBuffer(),
-            Buffer.from(vettorScore.score.toString()),
-            Buffer.from(now.toString()),
+            toBigUInt64BE(vettorScore.score),
+            toBigUInt64BE(now),
         ]);
         const plaintextHash = Buffer.from(sha3.keccak_256.digest(messageData));
-        console.log("Message hash:", Array.from(new Uint8Array(plaintextHash)));
 
         const sigObj = secp256k1.ecdsaSign(plaintextHash, secp256k1PrivKey);
         const signatureBytes = sigObj.signature;
         const recoveryId = sigObj.recid;
-        console.log(sigObj)
 
         const recoveredPubKey = secp256k1.ecdsaRecover(signatureBytes, recoveryId, plaintextHash, false);
-        console.log(Buffer.from(secp256k1PubKey).equals(Buffer.from(recoveredPubKey)));
 
         const { scorePda, tx } = await postScoreAttestation(
             attestor,
@@ -156,8 +159,8 @@ describe("score_attestor — AI scoring", () => {
             vettorScore.pdBps,
             500,
             expiryTs,
-            new Uint8Array(plaintextHash),
-            new Uint8Array(signatureBytes),
+            plaintextHash,
+            signatureBytes,
             recoveryId
         );
 
