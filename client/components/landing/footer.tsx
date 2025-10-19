@@ -17,7 +17,9 @@ export default function Footer() {
     ];
 
     return (
-        <footer className="border-t border-border/40 bg-muted/20 py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+        <footer className="relative border-t border-border/40 bg-gradient-to-b from-muted/20 to-muted/40 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+            {/* Background Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-blue-500/5 -z-10" />
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     {/* Brand */}

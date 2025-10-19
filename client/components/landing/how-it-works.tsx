@@ -174,133 +174,134 @@ export default function HowItWorks() {
                 </motion.div>
 
                 {/* Steps */}
-                <motion.div
-                    className="grid grid-cols-1 md:grid-cols-3 gap-8 relative"
-                    variants={containerVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                >
-                    {/* Connecting Line */}
-                    <div className="hidden md:block absolute top-20 left-0 right-0 h-1">
-                        <motion.div
-                            className="h-full bg-gradient-to-r from-violet-500/30 via-blue-500/30 to-emerald-500/30"
-                            initial={{ scaleX: 0 }}
-                            whileInView={{ scaleX: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1.5, delay: 0.5 }}
-                        />
-                    </div>
-
-                    {/* Floating Particles */}
-                    {[...Array(6)].map((_, i) => (
-                        <motion.div
-                            key={i}
-                            className="absolute w-2 h-2 bg-violet-500/20 rounded-full"
-                            style={{
-                                left: `${20 + i * 15}%`,
-                                top: '20%',
-                            }}
-                            animate={{
-                                y: [0, -20, 0],
-                                opacity: [0.2, 0.6, 0.2],
-                            }}
-                            transition={{
-                                duration: 3 + i * 0.5,
-                                repeat: Infinity,
-                                delay: i * 0.3,
-                            }}
-                        />
-                    ))}
-
-                    {currentSteps.map((step, index) => {
-                        const Icon = step.icon;
-                        const isHovered = hoveredStep === index;
-
-                        return (
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeRole}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-8 relative mt-12"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {/* Connecting Line */}
+                        <div className="hidden md:block absolute top-8 left-0 right-0 h-1 z-0">
                             <motion.div
-                                key={`${activeRole}-${step.number}`}
-                                variants={itemVariants}
-                                className="relative group"
-                                onHoverStart={() => setHoveredStep(index)}
-                                onHoverEnd={() => setHoveredStep(null)}
-                            >
-                                {/* Desktop Icon */}
+                                className="h-full bg-gradient-to-r from-violet-500/30 via-blue-500/30 to-emerald-500/30"
+                                initial={{ scaleX: 0 }}
+                                animate={{ scaleX: 1 }}
+                                transition={{ duration: 1, delay: 0.2 }}
+                            />
+                        </div>
+
+                        {currentSteps.map((step, index) => {
+                            const Icon = step.icon;
+                            const isHovered = hoveredStep === index;
+
+                            return (
                                 <motion.div
-                                    className="hidden md:flex absolute -top-28 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-gradient-to-br items-center justify-center border-4 border-background shadow-lg z-10"
-                                    style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }}
-                                    whileHover={{ scale: 1.1, rotate: 5 }}
-                                    transition={{ duration: 0.3 }}
+                                    key={index}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                                    className="relative group"
+                                    onMouseEnter={() => setHoveredStep(index)}
+                                    onMouseLeave={() => setHoveredStep(null)}
                                 >
-                                    <Icon className="w-8 h-8 text-white" />
-                                </motion.div>
-
-                                {/* Mobile Icon */}
-                                <motion.div className="md:hidden mb-4 flex items-center gap-3">
-                                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center text-white font-bold text-lg`}>
-                                        {step.number}
-                                    </div>
-                                    <Icon className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-                                </motion.div>
-
-                                <div className="pt-8 md:pt-40">
+                                    {/* Step Number Badge - Desktop */}
                                     <motion.div
-                                        className={`bg-background border border-border/40 rounded-xl p-6 transition-all duration-300 ${isHovered ? 'shadow-xl shadow-violet-500/10 border-violet-500/30' : ''
-                                            }`}
-                                        whileHover={{ y: -4 }}
+                                        className="hidden md:flex absolute -top-4 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full items-center justify-center border-4 border-background shadow-lg z-10"
+                                        style={{ 
+                                            background: step.color.includes('violet') 
+                                                ? 'linear-gradient(135deg, #7c3aed, #3b82f6)' 
+                                                : step.color.includes('blue') 
+                                                ? 'linear-gradient(135deg, #3b82f6, #10b981)' 
+                                                : 'linear-gradient(135deg, #10b981, #7c3aed)'
+                                        }}
+                                        whileHover={{ scale: 1.1, rotate: 5 }}
+                                        transition={{ duration: 0.3 }}
                                     >
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <h3 className="text-xl font-semibold">
-                                                {step.title}
-                                            </h3>
-                                            {isHovered && (
-                                                <motion.div
-                                                    initial={{ scale: 0 }}
-                                                    animate={{ scale: 1 }}
-                                                    className="w-2 h-2 bg-emerald-500 rounded-full"
-                                                />
-                                            )}
-                                        </div>
-
-                                        <p className="text-foreground/60 leading-relaxed mb-4">
-                                            {step.description}
-                                        </p>
-
-                                        {/* Expandable Details */}
-                                        <AnimatePresence>
-                                            {isHovered && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: 'auto' }}
-                                                    exit={{ opacity: 0, height: 0 }}
-                                                    transition={{ duration: 0.3 }}
-                                                    className="overflow-hidden"
-                                                >
-                                                    <div className="border-t border-border/20 pt-4">
-                                                        <ul className="space-y-2">
-                                                            {step.details.map((detail, detailIndex) => (
-                                                                <motion.li
-                                                                    key={detailIndex}
-                                                                    initial={{ opacity: 0, x: -10 }}
-                                                                    animate={{ opacity: 1, x: 0 }}
-                                                                    transition={{ delay: detailIndex * 0.1 }}
-                                                                    className="flex items-center gap-2 text-sm text-foreground/70"
-                                                                >
-                                                                    <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-                                                                    {detail}
-                                                                </motion.li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
+                                        <Icon className="w-8 h-8 text-white" />
                                     </motion.div>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </motion.div>
+
+                                    {/* Mobile Header */}
+                                    <div className="md:hidden mb-4 flex items-center gap-3">
+                                        <div 
+                                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
+                                            style={{ 
+                                                background: step.color.includes('violet') 
+                                                    ? 'linear-gradient(135deg, #7c3aed, #3b82f6)' 
+                                                    : step.color.includes('blue') 
+                                                    ? 'linear-gradient(135deg, #3b82f6, #10b981)' 
+                                                    : 'linear-gradient(135deg, #10b981, #7c3aed)'
+                                            }}
+                                        >
+                                            {step.number}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-semibold">{step.title}</h3>
+                                        </div>
+                                    </div>
+
+                                    <div className="md:pt-16">
+                                        <motion.div
+                                            className={`bg-background border border-border/40 rounded-xl p-6 transition-all duration-300 ${
+                                                isHovered ? 'shadow-xl shadow-violet-500/10 border-violet-500/30' : ''
+                                            }`}
+                                            whileHover={{ y: -4 }}
+                                        >
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <h3 className="text-xl font-semibold hidden md:block">
+                                                    {step.title}
+                                                </h3>
+                                                {isHovered && (
+                                                    <motion.div
+                                                        initial={{ scale: 0 }}
+                                                        animate={{ scale: 1 }}
+                                                        className="w-2 h-2 bg-emerald-500 rounded-full hidden md:block"
+                                                    />
+                                                )}
+                                            </div>
+
+                                            <p className="text-foreground/60 leading-relaxed mb-4">
+                                                {step.description}
+                                            </p>
+
+                                            {/* Expandable Details */}
+                                            <AnimatePresence>
+                                                {isHovered && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        transition={{ duration: 0.3 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <div className="border-t border-border/20 pt-4">
+                                                            <ul className="space-y-2">
+                                                                {step.details.map((detail, detailIndex) => (
+                                                                    <motion.li
+                                                                        key={detailIndex}
+                                                                        initial={{ opacity: 0, x: -10 }}
+                                                                        animate={{ opacity: 1, x: 0 }}
+                                                                        transition={{ delay: detailIndex * 0.1 }}
+                                                                        className="flex items-center gap-2 text-sm text-foreground/70"
+                                                                    >
+                                                                        <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                                                                        {detail}
+                                                                    </motion.li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </motion.div>
+                </AnimatePresence>
 
                 {/* Bottom CTA */}
                 <motion.div
