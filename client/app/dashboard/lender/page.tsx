@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, DollarSign, PieChart, Clock, Zap } from "lucide-react";
 import { useUserRole } from "../../../hooks/use-user-role";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -12,23 +13,34 @@ export default function LenderDashboard() {
     const { connected } = useWallet();
     const router = useRouter();
 
-    // Redirect if not a lender or not connected
+    // Redirect only if wrong role; allow disconnected wallets and show connect prompt
     useEffect(() => {
-        if (!isLoading) {
-            if (!connected) {
-                // If wallet is disconnected, go to home page
-                router.push("/");
-            } else if (role !== "lender") {
-                // If connected but wrong role, go to onboarding
-                router.push("/onboarding");
-            }
+        if (!isLoading && role && role !== "lender") {
+            router.push("/onboarding");
         }
-    }, [isLoading, connected, role, router]);
+    }, [isLoading, role, router]);
 
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
+            </div>
+        );
+    }
+
+    // If wallet is disconnected, render a lightweight connect prompt inside dashboard
+    if (!connected) {
+        return (
+            <div className="min-h-screen bg-background">
+                <div className="pt-24 max-w-xl mx-auto px-4">
+                    <div className="text-center mb-6">
+                        <h1 className="text-2xl font-bold mb-2">Connect your wallet</h1>
+                        <p className="text-foreground/70">Please connect your Solana wallet to access your lender dashboard.</p>
+                    </div>
+                    <div className="flex justify-center">
+                        <WalletMultiButton />
+                    </div>
+                </div>
             </div>
         );
     }

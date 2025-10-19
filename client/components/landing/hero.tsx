@@ -3,6 +3,9 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, TrendingUp, Users, Zap, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useUserRole } from "../../hooks/use-user-role";
 
 interface Transaction {
     id: string;
@@ -12,6 +15,9 @@ interface Transaction {
 }
 
 export default function Hero() {
+    const router = useRouter();
+    const { connected } = useWallet();
+    const { role, onboarded } = useUserRole();
     const [stats, setStats] = useState({
         totalVolume: 0,
         activeLoans: 0,
@@ -67,14 +73,12 @@ export default function Hero() {
             time: "Just now",
         });
 
-        // Initial transactions
         setRecentTransactions([
             generateTransaction(),
             generateTransaction(),
             generateTransaction(),
         ]);
 
-        // Add new transaction every 5 seconds
         const interval = setInterval(() => {
             setRecentTransactions((prev) => {
                 const newTx = generateTransaction();
@@ -160,7 +164,7 @@ export default function Hero() {
                                     Secure
                                 </span>
                             </div>
-                            
+
                         </motion.div>
 
                         <motion.h1
@@ -187,7 +191,15 @@ export default function Hero() {
                             className="flex flex-col sm:flex-row gap-4 mb-12"
                         >
                             <motion.a
-                                href="/onboarding"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    if (onboarded && role) {
+                                        router.push(role === "borrower" ? "/dashboard/borrower" : "/dashboard/lender");
+                                        console.log("GET STARTED BUTTON GAVE US::", onboarded, role, connected)
+                                    } else {
+                                        router.push("/onboarding");
+                                    }
+                                }}
                                 className="px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white font-semibold rounded-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 flex items-center justify-center gap-2"
                                 whileHover={{
                                     scale: 1.05,
@@ -199,7 +211,14 @@ export default function Hero() {
                                 <ArrowRight className="w-5 h-5" />
                             </motion.a>
                             <motion.a
-                                href="/onboarding"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    if (onboarded && role && connected) {
+                                        router.push(role === "borrower" ? "/dashboard/borrower" : "/dashboard/lender");
+                                    } else {
+                                        router.push("/onboarding");
+                                    }
+                                }}
                                 className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:bg-muted/50 transition-colors duration-300 flex items-center justify-center gap-2"
                                 whileHover={{
                                     scale: 1.05,
