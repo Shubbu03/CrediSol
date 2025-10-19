@@ -1,287 +1,362 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { ArrowRight, DollarSign, Lock, TrendingUp, Users } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, TrendingUp, Users, Zap, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 
+interface Transaction {
+  id: string;
+  amount: number;
+  type: "borrow" | "lend";
+  time: string;
+}
+
 export default function Hero() {
-    const [stats, setStats] = useState({
-        totalVolume: 0,
-        activeLoans: 0,
-        lenders: 0,
-        avgApy: 0
+  const [stats, setStats] = useState({
+    totalVolume: 0,
+    activeLoans: 0,
+    lenders: 0,
+    avgApy: 0,
+  });
+
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 300], [0, 50]);
+  const y2 = useTransform(scrollY, [0, 300], [0, -50]);
+  const opacity = useTransform(scrollY, [0, 200], [1, 0]);
+
+  // Animate stats on mount
+  useEffect(() => {
+    const targetStats = {
+      totalVolume: 12470000,
+      activeLoans: 2847,
+      lenders: 1243,
+      avgApy: 12.4,
+    };
+
+    const duration = 2000;
+    const steps = 60;
+    const stepDuration = duration / steps;
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps;
+
+      setStats({
+        totalVolume: Math.floor(targetStats.totalVolume * progress),
+        activeLoans: Math.floor(targetStats.activeLoans * progress),
+        lenders: Math.floor(targetStats.lenders * progress),
+        avgApy: Number((targetStats.avgApy * progress).toFixed(1)),
+      });
+
+      if (currentStep >= steps) {
+        clearInterval(interval);
+        setStats(targetStats);
+      }
+    }, stepDuration);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Simulate live transactions
+  useEffect(() => {
+    const generateTransaction = (): Transaction => ({
+      id: Math.random().toString(36).substr(2, 9),
+      amount: Math.floor(Math.random() * 50000) + 1000,
+      type: Math.random() > 0.5 ? "borrow" : "lend",
+      time: "Just now",
     });
 
-    // Animate stats on mount
-    useEffect(() => {
-        const targetStats = {
-            totalVolume: 12470000,
-            activeLoans: 2847,
-            lenders: 1243,
-            avgApy: 12.4
-        };
+    // Initial transactions
+    setRecentTransactions([
+      generateTransaction(),
+      generateTransaction(),
+      generateTransaction(),
+    ]);
 
-        const duration = 2000;
-        const steps = 60;
-        const stepDuration = duration / steps;
+    // Add new transaction every 5 seconds
+    const interval = setInterval(() => {
+      setRecentTransactions((prev) => {
+        const newTx = generateTransaction();
+        return [newTx, ...prev.slice(0, 2)];
+      });
+    }, 5000);
 
-        let currentStep = 0;
-        const interval = setInterval(() => {
-            currentStep++;
-            const progress = currentStep / steps;
+    return () => clearInterval(interval);
+  }, []);
 
-            setStats({
-                totalVolume: Math.floor(targetStats.totalVolume * progress),
-                activeLoans: Math.floor(targetStats.activeLoans * progress),
-                lenders: Math.floor(targetStats.lenders * progress),
-                avgApy: Number((targetStats.avgApy * progress).toFixed(1))
-            });
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
 
-            if (currentStep >= steps) {
-                clearInterval(interval);
-                setStats(targetStats);
-            }
-        }, stepDuration);
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8 },
+    },
+  };
 
-        return () => clearInterval(interval);
-    }, []);
+  return (
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 px-4 bg-background">
+      {/* Animated Background Elements */}
+      <motion.div
+        className="absolute inset-0 -z-10"
+        style={{ opacity }}
+      >
+        {/* Gradient Orbs with Parallax */}
+        <motion.div
+          style={{ y: y1 }}
+          className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-violet-500/20 to-blue-500/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          style={{ y: y2 }}
+          className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/20 to-emerald-500/20 rounded-full blur-3xl"
+        />
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2,
-            },
-        },
-    };
+        {/* Floating Data Particles */}
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-violet-500/30 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              opacity: [0.3, 0.8, 0.3],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
 
-    const itemVariants = {
-        hidden: { opacity: 0, y: 30 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.8 },
-        },
-    };
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </motion.div>
 
-    return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 px-4 bg-background">
-            {/* Animated Background Elements */}
-            <motion.div
-                className="absolute inset-0 -z-10"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.2 }}
+      <div className="relative z-10 max-w-7xl w-full mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left Column - Main Content */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {/* Badge */}
+            <motion.div variants={itemVariants} className="mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-1 border border-border/30">
+                <Shield className="w-4 h-4 text-trust-green" />
+                <span className="text-sm font-medium">
+                  Audited & Secure
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Main Headline */}
+            <motion.h1
+              variants={itemVariants}
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
             >
-                {/* Floating Currency Symbols */}
-                {[...Array(8)].map((_, i) => (
-                    <motion.div
-                        key={i}
-                        className="absolute text-4xl text-violet-500/20 dark:text-violet-400/20"
-                        style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                        }}
-                        animate={{
-                            y: [0, -20, 0],
-                            rotate: [0, 5, 0],
-                            opacity: [0.2, 0.4, 0.2],
-                        }}
-                        transition={{
-                            duration: 4 + Math.random() * 2,
-                            repeat: Infinity,
-                            delay: Math.random() * 2,
-                        }}
-                    >
-                        {i % 3 === 0 ? "$" : i % 3 === 1 ? "₿" : "SOL"}
-                    </motion.div>
+              Borrow{" "}
+              <span className="gradient-text">$10,000</span>
+              <br />
+              with just{" "}
+              <span className="gradient-text">$500</span>
+            </motion.h1>
+
+            {/* Subheadline */}
+            <motion.p
+              variants={itemVariants}
+              className="text-xl text-foreground/70 mb-8 leading-relaxed"
+            >
+              Zero-knowledge proofs replace excessive collateral. Your data
+              stays private. Your capital stays free.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row gap-4 mb-12"
+            >
+              <motion.a
+                href="/app"
+                className="px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white font-semibold rounded-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 flex items-center justify-center gap-2"
+                whileHover={{
+                  scale: 1.05,
+                  y: -2,
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Start Borrowing
+                <ArrowRight className="w-5 h-5" />
+              </motion.a>
+              <motion.a
+                href="/app"
+                className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:bg-muted/50 transition-colors duration-300 flex items-center justify-center gap-2"
+                whileHover={{
+                  scale: 1.05,
+                  y: -2,
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Start Lending
+                <TrendingUp className="w-5 h-5" />
+              </motion.a>
+            </motion.div>
+
+            {/* Key Stats */}
+            <motion.div
+              variants={itemVariants}
+              className="grid grid-cols-3 gap-6"
+            >
+              <div>
+                <div className="text-3xl font-bold text-trust-green mb-1 tabular-nums">
+                  ${(stats.totalVolume / 1000000).toFixed(1)}M
+                </div>
+                <div className="text-sm text-foreground/60">Total Volume</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-violet-500 mb-1 tabular-nums">
+                  {stats.activeLoans.toLocaleString()}
+                </div>
+                <div className="text-sm text-foreground/60">Active Loans</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-blue-500 mb-1 tabular-nums">
+                  {stats.avgApy}%
+                </div>
+                <div className="text-sm text-foreground/60">Avg APY</div>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Right Column - Live Activity Feed */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="hidden lg:block"
+          >
+            <div className="relative">
+              {/* Live Indicator */}
+              <div className="absolute -top-4 left-0 flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-border/30">
+                <div className="w-2 h-2 bg-trust-green rounded-full animate-pulse" />
+                <span className="text-sm font-medium">Live Activity</span>
+              </div>
+
+              {/* Transaction Feed */}
+              <div className="mt-8 space-y-3">
+                {recentTransactions.map((tx, index) => (
+                  <motion.div
+                    key={tx.id}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="glass-card rounded-xl p-4 hover:bg-surface-2 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            tx.type === "borrow"
+                              ? "bg-violet-500/20"
+                              : "bg-trust-green/20"
+                          }`}
+                        >
+                          {tx.type === "borrow" ? (
+                            <ArrowRight className="w-5 h-5 text-violet-500" />
+                          ) : (
+                            <TrendingUp className="w-5 h-5 text-trust-green" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-semibold">
+                            {tx.type === "borrow" ? "Borrowed" : "Lent"}
+                          </div>
+                          <div className="text-sm text-foreground/60">
+                            {tx.time}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold tabular-nums">
+                          ${tx.amount.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-foreground/60">
+                          {tx.type === "borrow" ? "5% collateral" : "12.4% APY"}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
                 ))}
+              </div>
 
-                {/* Lock/Unlock Animation */}
-                <motion.div
-                    className="absolute top-1/4 right-1/4 w-32 h-32"
-                    animate={{
-                        scale: [1, 1.1, 1],
-                        rotate: [0, 5, 0],
-                    }}
-                    transition={{
-                        duration: 6,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                    }}
-                >
-                    <Lock className="w-full h-full text-violet-500/10 dark:text-violet-400/10" />
-                </motion.div>
-
-                {/* Gradient Orbs */}
-                <motion.div
-                    className="absolute top-1/4 -left-1/2 w-96 h-96 bg-gradient-to-br from-violet-500/5 to-blue-500/5 rounded-full blur-3xl"
-                    animate={{
-                        y: [0, 50, 0],
-                        x: [0, 30, 0],
-                    }}
-                    transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                    }}
-                />
-                <motion.div
-                    className="absolute bottom-1/4 -right-1/2 w-96 h-96 bg-gradient-to-br from-blue-500/5 to-emerald-500/5 rounded-full blur-3xl"
-                    animate={{
-                        y: [0, -50, 0],
-                        x: [0, -30, 0],
-                    }}
-                    transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.5,
-                    }}
-                />
-            </motion.div>
-
-            <motion.div
-                className="relative z-10 max-w-4xl text-center"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-            >
-                {/* Problem Statement */}
-                <motion.div
-                    variants={itemVariants}
-                    className="mb-8"
-                >
-                    <motion.p
-                        className="text-lg sm:text-xl text-foreground/60 mb-4"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5, duration: 0.8 }}
-                    >
-                        Collateral locks your capital. Credit checks expose your data. Traditional lending fails.
-                    </motion.p>
-                </motion.div>
-
-                {/* Main Headline */}
-                <motion.h1
-                    variants={itemVariants}
-                    className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight"
-                >
-                    <span className="text-foreground">Access liquidity</span>
-                    <br />
-                    <span className="bg-gradient-to-r from-violet-600 to-blue-600 dark:from-violet-400 dark:to-blue-400 bg-clip-text text-transparent">
-                        without barriers.
+              {/* Visual Data Flow */}
+              <motion.div
+                className="mt-8 p-6 glass-card rounded-xl"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-medium text-foreground/60">
+                    Network Activity
+                  </span>
+                  <Zap className="w-4 h-4 text-warning-amber" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-foreground/70">Processing Speed</span>
+                    <span className="font-semibold text-trust-green">
+                      0.4s avg
                     </span>
-                </motion.h1>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-foreground/70">Active Users</span>
+                    <span className="font-semibold">{stats.lenders}+</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-foreground/70">Success Rate</span>
+                    <span className="font-semibold text-trust-green">
+                      99.2%
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
 
-                {/* Solution Description */}
-                <motion.p
-                    variants={itemVariants}
-                    className="text-lg sm:text-xl text-foreground/70 mb-12 max-w-2xl mx-auto leading-relaxed"
-                >
-                    zkLend enables instant, undercollateralized loans powered by zero-knowledge credit scoring.
-                    Your data stays private. Your capital stays free.
-                </motion.p>
-
-                {/* Live Stats Ticker */}
-                <motion.div
-                    variants={itemVariants}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 max-w-3xl mx-auto"
-                >
-                    <motion.div
-                        className="bg-background/60 backdrop-blur-sm border border-border/30 rounded-xl p-4"
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <div className="flex items-center gap-2 mb-2">
-                            <DollarSign className="w-4 h-4 text-emerald-500" />
-                            <span className="text-sm text-foreground/60">Total Volume</span>
-                        </div>
-                        <div className="text-2xl font-bold tabular-nums">
-                            ${stats.totalVolume.toLocaleString()}
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        className="bg-background/60 backdrop-blur-sm border border-border/30 rounded-xl p-4"
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <div className="flex items-center gap-2 mb-2">
-                            <TrendingUp className="w-4 h-4 text-blue-500" />
-                            <span className="text-sm text-foreground/60">Active Loans</span>
-                        </div>
-                        <div className="text-2xl font-bold tabular-nums">
-                            {stats.activeLoans.toLocaleString()}
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        className="bg-background/60 backdrop-blur-sm border border-border/30 rounded-xl p-4"
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <div className="flex items-center gap-2 mb-2">
-                            <Users className="w-4 h-4 text-violet-500" />
-                            <span className="text-sm text-foreground/60">Lenders</span>
-                        </div>
-                        <div className="text-2xl font-bold tabular-nums">
-                            {stats.lenders.toLocaleString()}
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        className="bg-background/60 backdrop-blur-sm border border-border/30 rounded-xl p-4"
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <div className="flex items-center gap-2 mb-2">
-                            <TrendingUp className="w-4 h-4 text-emerald-500" />
-                            <span className="text-sm text-foreground/60">Avg APY</span>
-                        </div>
-                        <div className="text-2xl font-bold tabular-nums">
-                            {stats.avgApy}%
-                        </div>
-                    </motion.div>
-                </motion.div>
-
-                {/* CTA Buttons */}
-                <motion.div
-                    variants={itemVariants}
-                    className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-                >
-                    <motion.a
-                        href="/app"
-                        className="px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white font-semibold rounded-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 flex items-center gap-2"
-                        whileHover={{
-                            scale: 1.05,
-                            boxShadow: "0 20px 40px rgba(139, 92, 246, 0.3)",
-                            y: -2
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        Get Started
-                        <ArrowRight className="w-5 h-5" />
-                    </motion.a>
-                    <motion.button
-                        className="px-8 py-4 border-2 border-foreground/20 text-foreground font-semibold rounded-lg hover:bg-foreground/5 transition-colors duration-300"
-                        whileHover={{
-                            scale: 1.05,
-                            borderColor: "currentColor",
-                            y: -2
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                            const howItWorksSection = document.getElementById("how-it-works");
-                            howItWorksSection?.scrollIntoView({ behavior: "smooth" });
-                        }}
-                    >
-                        See How It Works
-                    </motion.button>
-                </motion.div>
-            </motion.div>
-        </section>
-    );
+      {/* Scroll Indicator */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <div className="w-6 h-10 rounded-full border-2 border-foreground/20 flex items-start justify-center p-2">
+          <motion.div
+            className="w-1 h-2 bg-foreground/40 rounded-full"
+            animate={{ y: [0, 12, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </div>
+      </motion.div>
+    </section>
+  );
 }

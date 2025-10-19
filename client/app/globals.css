@@ -13,6 +13,17 @@
   --gradient-primary: 140deg;
   --gradient-from: #7c3aed;
   --gradient-to: #3b82f6;
+  
+  /* Financial Trust Colors */
+  --trust-green: #10b981;
+  --trust-green-light: #34d399;
+  --warning-amber: #f59e0b;
+  --error-red: #ef4444;
+  
+  /* Depth & Layers */
+  --surface-1: rgba(124, 58, 237, 0.05);
+  --surface-2: rgba(124, 58, 237, 0.1);
+  --surface-3: rgba(124, 58, 237, 0.15);
 }
 
 @theme inline {
@@ -25,6 +36,13 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-trust-green: var(--trust-green);
+  --color-trust-green-light: var(--trust-green-light);
+  --color-warning-amber: var(--warning-amber);
+  --color-error-red: var(--error-red);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -41,12 +59,21 @@
   --accent-foreground: #0a0a0a;
   --gradient-from: #a78bfa;
   --gradient-to: #60a5fa;
+  
+  /* Financial Trust Colors - Dark Mode */
+  --trust-green: #10b981;
+  --trust-green-light: #34d399;
+  
+  /* Depth & Layers - Dark Mode */
+  --surface-1: rgba(167, 139, 250, 0.05);
+  --surface-2: rgba(167, 139, 250, 0.1);
+  --surface-3: rgba(167, 139, 250, 0.15);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
 .wallet-button-wrapper {
@@ -69,5 +96,45 @@ body {
 @media (min-width: 641px) {
   .wallet-button-wrapper button {
     padding: 0.5rem 1.5rem !important;
+  }
+}
+
+/* Custom Utilities */
+@utility gradient-text {
+  background: linear-gradient(to right, var(--gradient-from), var(--gradient-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@utility glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@utility animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@utility animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
