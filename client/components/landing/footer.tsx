@@ -18,7 +18,6 @@ export default function Footer() {
 
     return (
         <footer className="relative border-t border-border/40 bg-gradient-to-b from-muted/20 to-muted/40 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
-            {/* Background Gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-blue-500/5 -z-10" />
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
@@ -55,7 +54,6 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Product */}
                     <div>
                         <h4 className="font-semibold mb-4">Product</h4>
                         <ul className="space-y-2 text-sm">
@@ -66,7 +64,6 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    {/* Resources */}
                     <div>
                         <h4 className="font-semibold mb-4">Resources</h4>
                         <ul className="space-y-2 text-sm">
@@ -77,7 +74,6 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    {/* Community */}
                     <div>
                         <h4 className="font-semibold mb-4">Community</h4>
                         <div className="flex flex-col gap-3">
@@ -103,7 +99,6 @@ export default function Footer() {
                     </div>
                 </div>
 
-                {/* Bottom Bar */}
                 <div className="border-t border-border/20 pt-8">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-6 text-xs text-foreground/40">

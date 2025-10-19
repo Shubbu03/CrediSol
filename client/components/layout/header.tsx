@@ -23,7 +23,6 @@ export function Header() {
     const navLinks = [
         { label: "Features", href: "#features" },
         { label: "How It Works", href: "#how-it-works" },
-        { label: "Dashboard", href: "/dashboard" },
     ];
 
     return (
@@ -92,14 +91,16 @@ export function Header() {
                         </motion.div>
                     </motion.button>
 
-                    <motion.div
-                        className="wallet-button-wrapper"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.25, duration: 0.4 }}
-                    >
-                        <WalletMultiButton />
-                    </motion.div>
+                    {!isLandingPage && (
+                        <motion.div
+                            className="wallet-button-wrapper"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.25, duration: 0.4 }}
+                        >
+                            <WalletMultiButton />
+                        </motion.div>
+                    )}
                 </div>
             </div>
         </motion.header>

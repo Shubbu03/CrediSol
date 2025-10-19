@@ -102,7 +102,6 @@ export default function ProblemSolution() {
   return (
     <section className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -128,7 +127,6 @@ export default function ProblemSolution() {
           </p>
         </motion.div>
 
-        {/* Interactive Comparison Slider */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -142,9 +140,7 @@ export default function ProblemSolution() {
             onMouseMove={handleMouseMove}
             onTouchMove={handleTouchMove}
           >
-            {/* Slider Container */}
             <div className="relative h-[400px] sm:h-[500px]">
-              {/* Traditional Side (Left) */}
               <div
                 className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-600/5"
                 style={{
@@ -184,7 +180,6 @@ export default function ProblemSolution() {
                 </div>
               </div>
 
-              {/* zkLend Side (Right) */}
               <div
                 className="absolute inset-0 bg-gradient-to-br from-trust-green/5 to-violet-500/5"
                 style={{
@@ -226,7 +221,6 @@ export default function ProblemSolution() {
                 </div>
               </div>
 
-              {/* Slider Handle */}
               <div
                 className="absolute top-0 bottom-0 w-1 bg-gradient-to-b from-violet-500 to-blue-500 pointer-events-none z-10"
                 style={{ left: `${sliderPosition}%` }}
@@ -237,14 +231,12 @@ export default function ProblemSolution() {
               </div>
             </div>
 
-            {/* Slider Instruction */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-border/30 text-sm font-medium pointer-events-none">
               Drag to compare
             </div>
           </div>
         </motion.div>
 
-        {/* Impact Metrics */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
