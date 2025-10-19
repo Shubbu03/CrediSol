@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "../components/ui/theme-provider";
 import { WalletProvider } from "../components/wallet/wallet-provider";
 import { Header } from "../components/layout/header";
+import { QueryProvider } from "../components/providers/query-provider";
 
 
 const geistSans = Geist({
@@ -31,17 +32,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <WalletProvider>
-            <Header />
-            {children}
-          </WalletProvider>
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <WalletProvider>
+              <Header />
+              {children}
+            </WalletProvider>
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );
