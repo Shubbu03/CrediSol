@@ -44,4 +44,10 @@ pub enum ScoreAttestorError {
 
     #[msg("Insufficient oracle signers")]
     InsufficientOracleSigners,
+
+    #[msg("Invalid signature")]
+    InvalidSignature,
+
+    #[msg("Attestor unauthorized")]
+    UnauthorizedAttestor
 }

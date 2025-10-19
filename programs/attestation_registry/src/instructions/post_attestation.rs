@@ -2,8 +2,6 @@ use anchor_lang::{
     prelude::*,
     solana_program::{secp256k1_recover::secp256k1_recover},
 };
-// use ed25519_dalek::{Signature, Verifier};
-// use ethsign::{Protected, KeyFile};
 
 use crate::{
     error::AttestationRegistryError,

@@ -1,6 +1,4 @@
-use crate::{
-    error::ScoreAttestorError, event::ConfigInitialized, state::Config, ANCHOR_DISCRIMINATOR,
-};
+use crate::{event::ConfigInitialized, state::Config, ANCHOR_DISCRIMINATOR};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -23,29 +21,21 @@ pub struct InitializeConfig<'info> {
 impl<'info> InitializeConfig<'info> {
     pub fn init_config(
         &mut self,
-        oracle_threshold: u8,
-        max_staleness_secs: i64,
         bump: u8,
+        attestor: Pubkey,
+        secp256k1_pubkey: [u8; 65],
     ) -> Result<()> {
         let cfg = &mut self.config;
 
         cfg.admin = self.admin.key();
         cfg.bump = bump;
         cfg.paused = false;
-
-        require!(oracle_threshold > 0, ScoreAttestorError::InvalidOracleThreshold);
-        cfg.oracle_threshold = oracle_threshold;
-
-        require!(max_staleness_secs > 0, ScoreAttestorError::InvalidMaxStaleness);
-        cfg.max_staleness_secs = max_staleness_secs;
-
-        cfg.oracles = Vec::new();
-        cfg.models = Vec::new();
+        cfg.attestor = attestor;
+        cfg.secp256k1_pubkey = secp256k1_pubkey;
 
         emit!(ConfigInitialized {
             admin: cfg.admin,
-            oracle_threshold,
-            max_staleness_secs,
+            attestor: cfg.attestor,
         });
 
         Ok(())

@@ -42,9 +42,7 @@ impl<'info> AdminAndScore<'info> {
 
         emit!(ScoreRevoked {
             subject: self.score.subject,
-            loan: self.score.loan,
-            model_id: self.score.model_id,
-            model_version: self.score.model_version,
+            loan: self.score.loan
         });
 
         Ok(())
