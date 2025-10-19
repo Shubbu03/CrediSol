@@ -199,12 +199,7 @@ describe("score_attestor — post_scoreattestation", () => {
         });
 
         const logs = txDetails?.meta?.logMessages || [];
-        const hasEvent =
-            logs.some((l: string) => l.includes("Program data:")) ||
-            logs.some((l: string) => l.includes("ScorePosted")) ||
-            logs.some((l: string) =>
-                l.includes("score_attestor::event::ScorePosted")
-            );
+        const hasEvent = logs.some((l: string) => l.includes("ScorePosted:"))
 
         expect(hasEvent).to.be.true;
     });
@@ -380,4 +375,62 @@ describe("score_attestor — post_scoreattestation", () => {
         expect(before.subject.equals(after.subject)).to.be.true;
         expect(before.loan.equals(after.loan)).to.be.true;
     });
+
+    it("fetches Vettor AI score and posts attestation", async () => {
+        const admin = anchor.web3.Keypair.generate();
+        await airdrop(admin.publicKey, 2);
+
+        const subject = anchor.web3.Keypair.generate().publicKey;
+        const loan = anchor.web3.Keypair.generate().publicKey;
+        const now = Math.floor(Date.now() / 1000);
+        const expiryTs = now + 3600;
+
+        const setup = await setupConfig(admin);
+
+        async function fetchVettorScore(address: string) {
+            const url = "https://www.vettor.dev/api/wallet/analyze";
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ address }),
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`HTTP ${res.status} — ${text}`);
+            }
+            const data = await res.json() as any;
+            return {
+                score: data.totalScore,
+                grade: data.totalScore > 700 ? 5 : data.totalScore > 500 ? 4 : data.totalScore > 350 ? 3 : data.totalScore > 200 ? 2 : 1,
+                pdBps: Math.max(50, Math.min(5000, Math.floor((850 - data.totalScore) * 6))),
+                featureCommitmentBytes: new Uint8Array(32).fill(7),
+            };
+        }
+
+        const vettorScore = await fetchVettorScore(subject.toBase58());
+        console.log("Vettor score fetched:", vettorScore);
+
+        const { scorePda, tx } = await postScore(admin, subject, loan, {
+            score: vettorScore.score,
+            grade: vettorScore.grade,
+            pdBps: vettorScore.pdBps,
+            recMinCollateralBps: 500,
+            expiryTs,
+            featureCommitmentBytes: vettorScore.featureCommitmentBytes,
+            prepared: setup,
+        });
+
+        const scoreAcc = await program.account.scoreAttestation.fetch(scorePda);
+
+        expect(scoreAcc.score).to.equal(vettorScore.score);
+        expect(scoreAcc.grade).to.equal(vettorScore.grade);
+        expect(scoreAcc.pdBps).to.equal(vettorScore.pdBps);
+        expect(scoreAcc.recommendedMinCollateralBps).to.equal(500);
+        expect(scoreAcc.issuer.equals(admin.publicKey)).to.be.true;
+        expect(scoreAcc.expiryTs.toNumber()).to.equal(expiryTs);
+        expect(scoreAcc.revoked).to.be.false;
+
+        console.log("Posted attestation with Vettor AI score successfully. TX:", tx);
+    });
+
 });
