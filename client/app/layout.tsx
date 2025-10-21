@@ -6,6 +6,7 @@ import { WalletProvider } from "../components/wallet/wallet-provider";
 import { Header } from "../components/layout/header";
 import { QueryProvider } from "../components/providers/query-provider";
 import Provider from "./provider";
+import { Toaster } from "react-hot-toast";
 
 
 const geistSans = Geist({
@@ -44,6 +45,7 @@ export default function RootLayout({
               <WalletProvider>
                 <Header />
                 {children}
+                <Toaster />
               </WalletProvider>
             </Provider>
           </ThemeProvider>
