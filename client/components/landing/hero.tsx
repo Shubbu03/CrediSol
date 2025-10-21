@@ -27,9 +27,19 @@ export default function Hero() {
     const y2 = useTransform(scrollY, [0, 300], [0, -50]);
     const opacity = useTransform(scrollY, [0, 200], [1, 0]);
 
+    const [dots, setDots] = useState<{ left: string; top: string; duration: number; delay: number }[]>([]);
+
     useEffect(() => {
         animateStats();
         generateTransactions();
+
+        const generatedDots = [...Array(12)].map(() => ({
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            duration: 3 + Math.random() * 2,
+            delay: Math.random() * 2,
+        }));
+        setDots(generatedDots);
     }, [animateStats, generateTransactions]);
 
     const containerVariants = {
@@ -69,23 +79,20 @@ export default function Hero() {
                     className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/20 to-emerald-500/20 rounded-full blur-3xl"
                 />
 
-                {[...Array(12)].map((_, i) => (
+                {dots.map((dot, i) => (
                     <motion.div
                         key={i}
                         className="absolute w-1 h-1 bg-violet-500/30 rounded-full"
-                        style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                        }}
+                        style={{ left: dot.left, top: dot.top }}
                         animate={{
                             y: [0, -30, 0],
                             opacity: [0.3, 0.8, 0.3],
                             scale: [1, 1.5, 1],
                         }}
                         transition={{
-                            duration: 3 + Math.random() * 2,
+                            duration: dot.duration,
                             repeat: Infinity,
-                            delay: Math.random() * 2,
+                            delay: dot.delay,
                         }}
                     />
                 ))}
@@ -143,7 +150,7 @@ export default function Hero() {
                                         router.push("/onboarding");
                                     }
                                 }}
-                                className="px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white font-semibold rounded-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 flex items-center justify-center gap-2"
+                                className="px-8 py-4 bg-gradient-to-r from-violet-600 to-blue-600 text-white font-semibold rounded-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
                                 whileHover={{
                                     scale: 1.05,
                                     y: -2,
@@ -153,7 +160,7 @@ export default function Hero() {
                                 Get Started
                                 <ArrowRight className="w-5 h-5" />
                             </motion.a>
-                            <motion.a
+                            {/* <motion.a
                                 onClick={(e) => {
                                     e.preventDefault();
                                     if (onboarded && role && connected) {
@@ -162,7 +169,7 @@ export default function Hero() {
                                         router.push("/onboarding");
                                     }
                                 }}
-                                className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:bg-muted/50 transition-colors duration-300 flex items-center justify-center gap-2"
+                                className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:bg-muted/50 transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer"
                                 whileHover={{
                                     scale: 1.05,
                                     y: -2,
@@ -171,7 +178,7 @@ export default function Hero() {
                             >
                                 Start Lending
                                 <TrendingUp className="w-5 h-5" />
-                            </motion.a>
+                            </motion.a> */}
                         </motion.div>
 
                         <motion.div
@@ -206,7 +213,7 @@ export default function Hero() {
                         className="hidden lg:block"
                     >
                         <div className="relative">
-                            <div className="absolute -top-4 left-0 flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-border/30">
+                            <div className="absolute -top-13.5 left-0 flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-border/30">
                                 <div className="w-2 h-2 bg-trust-green rounded-full animate-pulse" />
                                 <span className="text-sm font-medium">Live Activity</span>
                             </div>
