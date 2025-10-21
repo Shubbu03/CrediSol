@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useLoanDetail, useLenderFund, bpsToPct, formatCurrencyMinor } from "../../../../hooks/use-loans";
+import { useLoanDetail, useLenderFund, useCreditScore, bpsToPct, formatCurrencyMinor } from "../../../../hooks/use-loans";
 import { useState } from "react";
 
 export default function LoanDetailPage() {
@@ -13,6 +13,7 @@ export default function LoanDetailPage() {
     const { connected } = useWallet();
     const router = useRouter();
     const { data: loan, isLoading } = useLoanDetail(loanId);
+    const { data: creditScore } = useCreditScore(loan?.borrower || "", loanId || "");
     const fund = useLenderFund();
     const [amount, setAmount] = useState<string>("");
 
@@ -59,10 +60,10 @@ export default function LoanDetailPage() {
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                            <Stat label="Credit Score" value={loan.creditScore.toString()} />
+                            <Stat label="Credit Score" value={creditScore?.score?.toString() || "N/A"} />
                             <Stat label="Amount" value={formatCurrencyMinor(loan.amount)} />
-                            <Stat label="Term" value={`${loan.termMonths} mo`} />
-                            <Stat label="Collateral" value={`${loan.collateralPct}%`} />
+                            <Stat label="Term" value={`${loan.termMonths.toFixed(1)} mo`} />
+                            <Stat label="Collateral" value={`${loan.collateralPct.toFixed(1)}%`} />
                         </div>
 
                         <div className="mb-6">

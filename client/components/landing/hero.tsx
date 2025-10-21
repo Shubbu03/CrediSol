@@ -143,9 +143,8 @@ export default function Hero() {
                             <motion.a
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    if (onboarded && role) {
+                                    if (connected && onboarded && role) {
                                         router.push(role === "borrower" ? "/dashboard/borrower" : "/dashboard/lender");
-                                        console.log("GET STARTED BUTTON GAVE US::", onboarded, role, connected)
                                     } else {
                                         router.push("/onboarding");
                                     }

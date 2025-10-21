@@ -6,8 +6,8 @@ import { useUserRole } from "../../../hooks/use-user-role";
 import { useWallet } from "@solana/wallet-adapter-react";
 import dynamic from "next/dynamic";
 const WalletMultiButton = dynamic(
-  () => import("@solana/wallet-adapter-react-ui").then(mod => mod.WalletMultiButton),
-  { ssr: false }
+    () => import("@solana/wallet-adapter-react-ui").then(mod => mod.WalletMultiButton),
+    { ssr: false }
 );
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
