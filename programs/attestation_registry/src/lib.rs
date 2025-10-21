@@ -12,7 +12,7 @@ pub use event::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("AQ4NQuyNkn9cmDmNpc3HzepHahPM8fWP255pHqrzWPBr");
+declare_id!("86MykibNZvSLLZWj5jDg7gXViaqMANMeuUauP32xn8sq");
 
 #[program]
 pub mod attestation_registry {

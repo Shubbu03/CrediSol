@@ -178,7 +178,7 @@ export default function Apply() {
           >
             <motion.div
               onClick={(e) => e.stopPropagation()}
-              className="relative rounded-2xl p-8 w-[50%] h-[40%] bg-background/80 border border-border/40 shadow-2xl backdrop-blur-md overflow-y-hidden"
+              className="relative rounded-2xl p-8 w-[50%] h-[85%] bg-background/80 border border-border/40 shadow-2xl backdrop-blur-md overflow-y-hidden"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
