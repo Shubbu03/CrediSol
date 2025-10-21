@@ -6,11 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "copy-idls": "cp ../target/idl/*.json ./lib/solana/idl/"
   },
   "dependencies": {
     "@anon-aadhaar/react": "^2.4.3",
     "@coral-xyz/anchor": "^0.32.1",
+    "@solana/spl-token": "^0.4.14",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",

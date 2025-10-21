@@ -1,6 +1,6 @@
 "use client";
 
-import { usePortfolio } from "../../../../hooks/use-loans";
+import { usePortfolio, getLoanState } from "../../../../hooks/use-loans";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -30,10 +30,10 @@ export default function PortfolioPage() {
                         <div className="space-y-3">
                             {positions.map((p) => (
                                 <motion.div key={p.loanId} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-3 rounded-lg bg-background border border-border/30">
-                                    <div className="text-sm">Loan #{p.loanId}</div>
-                                    <div className="text-sm text-foreground/70">{p.state}</div>
-                                    <div className="text-sm font-medium">{(p.amount / 100).toFixed(2)} USDC</div>
-                                    <div className="text-xs text-foreground/60">{p.sharePct.toFixed(2)}%</div>
+                                    <div className="text-sm">Loan #{p.loanId.slice(0, 8)}...</div>
+                                    <div className="text-sm text-foreground/70">{getLoanState(p.state)}</div>
+                                    <div className="text-sm font-medium">{(p.principal / 100).toFixed(2)} USDC</div>
+                                    <div className="text-xs text-foreground/60">{(p.proRataBps / 100).toFixed(2)}%</div>
                                 </motion.div>
                             ))}
                         </div>
