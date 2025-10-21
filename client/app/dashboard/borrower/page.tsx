@@ -4,7 +4,11 @@ import { motion } from "framer-motion";
 import { ArrowRight, TrendingUp, Shield, CreditCard, DollarSign, Clock } from "lucide-react";
 import { useUserRole } from "../../../hooks/use-user-role";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import dynamic from "next/dynamic";
+const WalletMultiButton = dynamic(
+  () => import("@solana/wallet-adapter-react-ui").then(mod => mod.WalletMultiButton),
+  { ssr: false }
+);
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -70,7 +74,7 @@ export default function BorrowerDashboard() {
             {/* Background Elements */}
             <div className="absolute inset-0 -z-10">
                 <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-violet-500/10 to-blue-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/10 to-emerald-500/10 rounded-full blur-3xl" />
+                {/* <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/10 to-emerald-500/10 rounded-full blur-3xl" /> */}
             </div>
 
             <div className="relative z-10 min-h-screen">
@@ -158,6 +162,7 @@ export default function BorrowerDashboard() {
                                     className="p-6 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 text-left"
                                     whileHover={{ scale: 1.02, y: -2 }}
                                     whileTap={{ scale: 0.98 }}
+                                    onClick={() => router.push('/dashboard/borrower/apply')}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
                                         <ArrowRight className="w-5 h-5" />
