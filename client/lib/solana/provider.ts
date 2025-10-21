@@ -2,13 +2,13 @@
 
 import { AnchorProvider } from '@coral-xyz/anchor';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { connection } from './connection';
 
 export function useAnchorProvider() {
     const wallet = useWallet();
+    const { connection } = useConnection();
 
     if (!wallet.publicKey || !wallet.signTransaction) {
-        throw new Error("Wallet not connected");
+        return null; // Return null instead of throwing error
     }
 
     return new AnchorProvider(

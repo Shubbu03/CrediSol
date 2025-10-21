@@ -13,6 +13,7 @@ const PROGRAM_ID = LOANS_PROGRAM_ID;
 
 export function useScoreAttestorProgram() {
     const provider = useAnchorProvider();
+    if (!provider) return null;
     return new Program(scoreAttestorIdl as any, provider);
 }
 
@@ -32,6 +33,7 @@ export function useScoreAttestationPda(subject: PublicKey, loan: PublicKey) {
 
 export function useLoansProgram() {
     const provider = useAnchorProvider();
+    if (!provider) return null;
     return new Program(loansMarketplaceIdl as any, provider);
 }
 

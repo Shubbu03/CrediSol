@@ -75,7 +75,11 @@ export function useLoansList() {
 
     return useQuery({
         queryKey: ["loans", filters.termMonths, filters.minAprBps, filters.minScore],
+        enabled: !!program, // Only run query when program is available
         queryFn: async () => {
+            if (!program) {
+                throw new Error("Program not available");
+            }
             try {
                 const loans = await (program.account as any).loanAccount.all();
                 const mappedLoans: LoanSummary[] = loans.map((loan: any) => ({
@@ -111,7 +115,6 @@ export function useLoansList() {
                 return [];
             }
         },
-        enabled: !!program,
     });
 }
 
@@ -122,6 +125,9 @@ export function useLoanDetail(loanId?: string) {
         queryKey: ["loan", loanId],
         enabled: Boolean(loanId) && !!program,
         queryFn: async () => {
+            if (!program) {
+                throw new Error("Program not available");
+            }
             try {
                 const loanPda = new PublicKey(loanId!);
                 const loan = await (program.account as any).loanAccount.fetch(loanPda);
@@ -168,6 +174,9 @@ export function usePortfolio() {
         queryKey: ["portfolio", publicKey?.toBase58()],
         enabled: !!program && !!publicKey,
         queryFn: async (): Promise<PortfolioPosition[]> => {
+            if (!program) {
+                throw new Error("Program not available");
+            }
             try {
                 const lenderShares = await (program.account as any).lenderShare.all([
                     {
@@ -214,7 +223,11 @@ export function useCreditScore(borrower: string, loanId: string) {
 
     return useQuery({
         queryKey: ["creditScore", borrower, loanId],
+        enabled: !!scoreProgram,
         queryFn: async () => {
+            if (!scoreProgram) {
+                throw new Error("Score program not available");
+            }
             try {
                 const borrowerPubkey = new PublicKey(borrower);
                 const loanPubkey = new PublicKey(loanId);
@@ -232,7 +245,6 @@ export function useCreditScore(borrower: string, loanId: string) {
                 return null;
             }
         },
-        enabled: Boolean(borrower) && Boolean(loanId) && !!scoreProgram,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
@@ -248,6 +260,7 @@ export function useLenderFund() {
         mutationKey: ["lender_fund"],
         mutationFn: async ({ loanId, amount }: { loanId: string; amount: number }) => {
             if (!publicKey) throw new Error("Wallet not connected");
+            if (!program) throw new Error("Program not available");
 
             try {
                 notify("Processing funding transaction...", "info");
@@ -303,6 +316,7 @@ export function useFinalizeFunding() {
         mutationKey: ["finalize_funding"],
         mutationFn: async ({ loanId }: { loanId: string }) => {
             if (!publicKey) throw new Error("Wallet not connected");
+            if (!program) throw new Error("Program not available");
 
             try {
                 notify("Processing finalize funding transaction...", "info");
@@ -343,6 +357,7 @@ export function usePayoutToLenders() {
         mutationKey: ["payout_to_lenders"],
         mutationFn: async ({ loanId }: { loanId: string }) => {
             if (!publicKey) throw new Error("Wallet not connected");
+            if (!program) throw new Error("Program not available");
 
             try {
                 notify("Processing payout transaction...", "info");
