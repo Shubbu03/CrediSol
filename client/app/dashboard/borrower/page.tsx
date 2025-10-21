@@ -162,6 +162,7 @@ export default function BorrowerDashboard() {
                                     className="p-6 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 text-left"
                                     whileHover={{ scale: 1.02, y: -2 }}
                                     whileTap={{ scale: 0.98 }}
+                                    onClick={() => router.push('/dashboard/borrower/apply')}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
                                         <ArrowRight className="w-5 h-5" />

@@ -5,6 +5,7 @@ import { ThemeProvider } from "../components/ui/theme-provider";
 import { WalletProvider } from "../components/wallet/wallet-provider";
 import { Header } from "../components/layout/header";
 import { QueryProvider } from "../components/providers/query-provider";
+import Provider from "./provider";
 
 
 const geistSans = Geist({
@@ -39,10 +40,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <WalletProvider>
-              <Header />
-              {children}
-            </WalletProvider>
+            <Provider>
+              <WalletProvider>
+                <Header />
+                {children}
+              </WalletProvider>
+            </Provider>
           </ThemeProvider>
         </QueryProvider>
       </body>
