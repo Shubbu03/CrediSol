@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useLoansList } from "../../../hooks/use-loans";
 import { LoanCard } from "../../../components/lender/loan-card";
 import { LoanFilters } from "../../../components/lender/filters";
+import { LoansLoader, NoLoansEmptyState } from "../../../components/shared/loader";
 
 export default function LenderDashboard() {
     const { role, isLoading, resetOnboarding } = useUserRole();
@@ -73,21 +74,9 @@ export default function LenderDashboard() {
         return (
             <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
                 {isLoading ? (
-                    <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-trust-green mx-auto mb-4"></div>
-                        <p className="text-foreground/60 text-lg font-medium mb-2">Loading loans...</p>
-                        <p className="text-sm text-foreground/50">
-                            Finding the best lending opportunities for you
-                        </p>
-                    </div>
+                    <LoansLoader />
                 ) : !data || data.length === 0 ? (
-                    <div className="text-center py-8">
-                        <DollarSign className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
-                        <p className="text-foreground/60 text-lg font-medium mb-2">No current loans to fund</p>
-                        <p className="text-sm text-foreground/50">
-                            Check back later for new lending opportunities
-                        </p>
-                    </div>
+                    <NoLoansEmptyState />
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {data.map((loan) => (

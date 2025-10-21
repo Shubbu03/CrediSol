@@ -3,6 +3,7 @@
 import { usePortfolio, getLoanState } from "../../../../hooks/use-loans";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { PortfolioLoader, NoPortfolioEmptyState } from "../../../../components/shared/loader";
 
 export default function PortfolioPage() {
     const { data: positions, isLoading } = usePortfolio();
@@ -23,9 +24,9 @@ export default function PortfolioPage() {
                 <h1 className="text-2xl font-bold mb-4">Your Portfolio</h1>
                 <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
                     {isLoading ? (
-                        <div>Loading...</div>
+                        <PortfolioLoader />
                     ) : !positions || positions.length === 0 ? (
-                        <div className="text-foreground/60 text-sm">No funded positions yet.</div>
+                        <NoPortfolioEmptyState />
                     ) : (
                         <div className="space-y-3">
                             {positions.map((p) => (
