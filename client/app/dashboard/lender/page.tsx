@@ -118,8 +118,8 @@ export default function LenderDashboard() {
                             <motion.div variants={itemVariants} className="mb-8">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-xl font-semibold">Available Lending Opportunities</h2>
-                                    <Link href="/dashboard/lend/portfolio" className="text-sm text-foreground/70 hover:text-foreground">
-                                        View Portfolio →
+                                    <Link href="/marketplace" className="text-sm text-foreground/70 hover:text-foreground">
+                                        To Marketplace →
                                     </Link>
                                 </div>
                                 <div className="mb-4">
@@ -129,7 +129,12 @@ export default function LenderDashboard() {
                             </motion.div>
 
                             <motion.div variants={itemVariants}>
-                                <h2 className="text-xl font-semibold mb-4">Portfolio Overview</h2>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-xl font-semibold">Portfolio Overview</h2>
+                                    <Link href="/dashboard/lend/portfolio" className="text-sm text-foreground/70 hover:text-foreground">
+                                        View Portfolio →
+                                    </Link>
+                                </div>
                                 <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
                                     <div className="text-center py-8">
                                         <PieChart className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
