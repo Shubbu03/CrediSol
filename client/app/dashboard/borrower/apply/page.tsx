@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Shield, CreditCard, X } from "lucide-react";
+import { ArrowRight, Shield, CreditCard, X, CheckCircle2, Loader2 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,14 +14,22 @@ import {
 import { useProver } from "@anon-aadhaar/react";
 import { useUserRole } from "../../../../stores/user-store";
 import { getCreditScore } from "../../../actions/getCreditScore";
+import { zkPassProofGen, getAttestation } from "../../../../lib/getProofs/zkPass";
+import { getProgram } from "../../../../lib/getProgram/attestationRegistry";
 
 export default function Apply() {
   const { role, isLoading } = useUserRole();
-  const { connected, publicKey } = useWallet();
+  const wallet = useWallet();
+  const { connected, publicKey } = wallet;
   const router = useRouter();
+  const program = getProgram();
 
   const [creditScore, setCreditScore] = useState<string | number>('--');
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [zkPassAttestation, setZkPassAttestation] = useState<any>(null);
+  const [zkPassLoading, setZkPassLoading] = useState(false);
+  const [zkPassResult, setZkPassResult] = useState<any>(null);
+  const [proofsLoading, setProofsLoading] = useState(true);
 
   const [anonAadhaar] = useAnonAadhaar();
   const [, latestProof] = useProver();
@@ -34,11 +42,19 @@ export default function Apply() {
 
 
   useEffect(() => {
-    if (!connected || !publicKey) return;
+    if (!connected || !publicKey) {
+      setProofsLoading(false);
+      return;
+    }
 
     (async () => {
+      setProofsLoading(true);
       const score = await getCreditScore(publicKey.toBase58());
       if (score !== null) setCreditScore(score);
+
+      const attestation = await getAttestation({ address: publicKey.toBase58(), program: program! });
+      setZkPassAttestation(attestation);
+      setProofsLoading(false);
     })();
   }, [connected, publicKey]);
 
@@ -65,12 +81,20 @@ export default function Apply() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
-  if (!connected) {
+  if (!connected || !publicKey || !program) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-foreground/70">
           Please connect your wallet to access this page.
         </p>
+      </div>
+    );
+  }
+
+  if (proofsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -125,20 +149,39 @@ export default function Apply() {
 
           <motion.button
             variants={itemVariants}
-            whileHover={{ scale: 1.03, y: -3, boxShadow: "0 8px 24px rgba(0, 186, 255, 0.3)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveModal("zkpass")}
-            className="w-full p-6 rounded-xl text-left border border-border/30 transition-all text-foreground backdrop-blur-md bg-gradient-to-br from-blue-400/5 to-emerald-400/5 hover:from-blue-400/10 hover:to-emerald-400/10"
+            whileHover={{ scale: zkPassAttestation?.isValid ? 1.01 : 1.03, y: zkPassAttestation?.isValid ? 0 : -3, boxShadow: zkPassAttestation?.isValid ? "none" : "0 8px 24px rgba(0, 186, 255, 0.3)" }}
+            whileTap={{ scale: zkPassAttestation?.isValid ? 1 : 0.98 }}
+            onClick={() => !zkPassAttestation?.isValid && setActiveModal("zkpass")}
+            className={`w-full p-6 rounded-xl text-left border transition-all text-foreground backdrop-blur-md ${zkPassAttestation?.isValid
+              ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-green-500/10 cursor-default'
+              : 'border-border/30 bg-gradient-to-br from-blue-400/5 to-emerald-400/5 hover:from-blue-400/10 hover:to-emerald-400/10 cursor-pointer'
+              }`}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <CreditCard className="w-5 h-5 text-blue-400" />
-              <span className="font-semibold text-foreground">
-                Generate zkPass Proofs
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  {zkPassAttestation?.isValid ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <CreditCard className="w-5 h-5 text-blue-400" />
+                  )}
+                  <span className="font-semibold text-foreground">
+                    {zkPassAttestation?.isValid ? 'zkPass Verified' : 'Generate zkPass Proofs'}
+                  </span>
+                </div>
+                <p className="text-sm text-foreground/70">
+                  {zkPassAttestation?.isValid
+                    ? `Verified on ${new Date(zkPassAttestation.issuedAt).toLocaleDateString()} • Expires ${new Date(zkPassAttestation.expiryTs).toLocaleDateString()}`
+                    : 'Generate zero-knowledge proofs via zkPass for private verification.'
+                  }
+                </p>
+              </div>
+              {zkPassAttestation?.isValid && (
+                <div className="ml-4 px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
+                  Active
+                </div>
+              )}
             </div>
-            <p className="text-sm text-foreground/70">
-              Generate zero-knowledge proofs via zkPass for private verification.
-            </p>
           </motion.button>
 
           <motion.button
@@ -226,9 +269,81 @@ export default function Apply() {
                     Create a zero-knowledge proof using zkPass for privacy-preserving verification.
                   </p>
 
-                  <button className="w-full py-3 rounded-lg border border-border text-foreground font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors">
-                    Generate Proof
-                  </button>
+                  {!zkPassResult ? (
+                    <button
+                      className="w-full py-3 rounded-lg border border-border text-foreground font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      onClick={async () => {
+                        setZkPassLoading(true);
+                        try {
+                          const result = await zkPassProofGen({ address: publicKey?.toBase58()!, program });
+                          setZkPassResult(result);
+                          if (result && result.success) {
+                            const attestation = await getAttestation({ address: publicKey.toBase58(), program });
+                            setZkPassAttestation(attestation);
+                          }
+                        } finally {
+                          setZkPassLoading(false);
+                        }
+                      }}
+                      disabled={zkPassLoading}
+                    >
+                      {zkPassLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {zkPassLoading ? 'Generating Proof...' : 'Generate Proof'}
+                    </button>
+                  ) : (
+                    <div className="space-y-4">
+                      {zkPassResult.success ? (
+                        <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 space-y-2">
+                              <h3 className="font-semibold text-emerald-400">Proof Generated Successfully!</h3>
+                              <div className="text-sm text-foreground/70 space-y-1">
+                                <p className="break-all">
+                                  <span className="font-medium text-foreground">Transaction:</span>{' '}
+                                  <a
+                                    href={`https://explorer.solana.com/tx/${zkPassResult.signature}?cluster=devnet`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:underline"
+                                  >
+                                    {zkPassResult.signature?.slice(0, 8)}...{zkPassResult.signature?.slice(-8)}
+                                  </a>
+                                </p>
+                                <p className="break-all">
+                                  <span className="font-medium text-foreground">Attestation PDA:</span>{' '}
+                                  <span className="text-emerald-400">{zkPassResult.attestationPda}</span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                          <div className="flex items-start gap-3">
+                            <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-red-400">Proof Generation Failed</h3>
+                              <p className="text-sm text-foreground/70 mt-1">
+                                {zkPassResult.error?.message || 'An error occurred while generating the proof.'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        className="w-full py-2 rounded-lg border border-border text-foreground text-sm font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors"
+                        onClick={() => {
+                          setZkPassResult(null);
+                          if (zkPassResult.success) {
+                            setActiveModal(null);
+                          }
+                        }}
+                      >
+                        {zkPassResult.success ? 'Close' : 'Try Again'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

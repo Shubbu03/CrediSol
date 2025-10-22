@@ -5,7 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import type { AttestationRegistry } from "../../program/types/attestation_registry";
 import idl from "../../program/idl/attestation_registry.json";
 
-export const useProgram = () => {
+export const getProgram = () => {
     const { wallet, signTransaction, signAllTransactions, publicKey } = useWallet();
     const connection = new Connection(clusterApiUrl("devnet"));
 
