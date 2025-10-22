@@ -107,42 +107,82 @@ export const zkPassProofGen = async ({ address, program }: {
             [Buffer.from("attest_config")],
             program.programId
         );
-        const tx = await program.methods
-            .postAttestation(
-                { zkPassIdentity: {} },
-                Array.from(plaintextHash),
-                new anchor.BN(expiryTs),
-                Array.from(signatureBytes),
-                recoverId,
-                Array.from(pubKey),
-                255
-            )
-            .accountsStrict({
-                config: configPda,
-                subject: recipientPubkey,
-                attestation: attestationPda,
-                issuer: zkPassIssuerPubkey,
-                payer: recipientPubkey,
-                systemProgram: anchor.web3.SystemProgram.programId,
-            })
-            .rpc();
-        console.log("Transaction signature:", tx);
-        const listener = program.addEventListener("attestationPosted", (event, slot) => {
-            console.log("AttestationPosted event received:", {
-                subject: event.subject.toBase58(),
-                schemaId: event.schemaId,
-                issuer: event.issuer.toBase58(),
-                claimHash: Buffer.from(event.claimHash).toString("hex"),
-                expiryTs: event.expiryTs.toString(),
-                slot,
+
+        try {
+            try {
+                const existingAttestation = await program.account.attestation.fetch(attestationPda);
+                console.log('Attestation already exists:', existingAttestation);
+                return {
+                    success: true,
+                    signature: '',
+                    attestationPda: attestationPda.toBase58(),
+                    alreadyExists: true
+                };
+            } catch (error) {
+                console.log('No existing attestation found, creating a new one...');
+            }
+
+            const tx = await program.methods
+                .postAttestation(
+                    { zkPassIdentity: {} },
+                    Array.from(plaintextHash),
+                    new anchor.BN(expiryTs),
+                    Array.from(signatureBytes),
+                    recoverId,
+                    Array.from(pubKey),
+                    255
+                )
+                .accountsStrict({
+                    config: configPda,
+                    subject: recipientPubkey,
+                    attestation: attestationPda,
+                    issuer: zkPassIssuerPubkey,
+                    payer: recipientPubkey,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                })
+                .rpc();
+
+            console.log("Transaction signature:", tx);
+
+            const listener = program.addEventListener("attestationPosted", (event, slot) => {
+                console.log("AttestationPosted event received:", {
+                    subject: event.subject.toBase58(),
+                    schemaId: event.schemaId,
+                    issuer: event.issuer.toBase58(),
+                    claimHash: Buffer.from(event.claimHash).toString("hex"),
+                    expiryTs: event.expiryTs.toString(),
+                    slot,
+                });
             });
-        });
 
-        setTimeout(() => {
-            program.removeEventListener(listener);
-        }, 60000);
+            setTimeout(() => {
+                program.removeEventListener(listener);
+            }, 60000);
 
-        return { success: true, signature: tx, attestationPda: attestationPda.toBase58() };
+            return {
+                success: true,
+                signature: tx,
+                attestationPda: attestationPda.toBase58(),
+                alreadyExists: false
+            };
+        } catch (error: any) {
+            if (error.message && error.message.includes('already been processed')) {
+                console.log('Transaction was already processed, checking attestation status...');
+                try {
+                    const attestation = await program.account.attestation.fetch(attestationPda);
+                    return {
+                        success: true,
+                        signature: '',
+                        attestationPda: attestationPda.toBase58(),
+                        alreadyExists: true
+                    };
+                } catch (fetchError) {
+                    console.error('Error fetching attestation after duplicate tx error:', fetchError);
+                    throw error;
+                }
+            }
+            throw error;
+        }
     } catch (error) {
         console.error("Error generating zkPass proof:", error);
         return { success: false, error };
