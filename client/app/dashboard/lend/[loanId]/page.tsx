@@ -6,12 +6,12 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useLoanDetail, useLenderFund, useCreditScore, bpsToPct, formatCurrencyMinor } from "../../../../hooks/use-loans";
 import { useState } from "react";
+import { BackButton } from "../../../../components/shared/back-button";
 
 export default function LoanDetailPage() {
     const params = useParams<{ loanId: string }>();
     const loanId = params?.loanId;
     const { connected } = useWallet();
-    const router = useRouter();
     const { data: loan, isLoading } = useLoanDetail(loanId);
     const { data: creditScore } = useCreditScore(loan?.borrower || "", loanId || "");
     const fund = useLenderFund();
@@ -38,15 +38,7 @@ export default function LoanDetailPage() {
     return (
         <div className="min-h-screen bg-background">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
-                <button
-                    className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground mb-6 transition-colors"
-                    onClick={() => router.back()}
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to Dashboard
-                </button>
+                <BackButton />
 
                 {isLoading || !loan ? (
                     <div className="p-6 bg-surface-1 rounded-xl border border-border/30">Loading...</div>
