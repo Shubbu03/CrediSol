@@ -89,9 +89,9 @@ describe("attestation_registry", () => {
             .signers([admin])
             .rpc();
 
-        const reclaimOwner = "0x7af75fb20c6a3ad403c568430f3cab891c961191";
-        const ethAddressBytes = Buffer.from(reclaimOwner.slice(2), "hex");
-        const padded = Buffer.concat([Buffer.alloc(12), ethAddressBytes]); // pad to 32 bytes
+        const reclaimIdentifier = "0xdec977493c546ac87206192de85ff8ee431a4167b70bf3d5ef31376de3d268e6";
+        const identifierHash = Buffer.from(sha3.keccak_256.digest(Buffer.from(reclaimIdentifier.slice(2), 'hex')));
+        const padded = Buffer.concat([Buffer.alloc(32 - identifierHash.length), identifierHash]);
         plaidIssuerPubkey = new anchor.web3.PublicKey(padded);
 
         await program.methods

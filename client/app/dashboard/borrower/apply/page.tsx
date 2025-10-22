@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Shield, CreditCard, X } from "lucide-react";
+import { ArrowRight, Shield, CreditCard, X, CheckCircle2, Loader2 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,14 +14,27 @@ import {
 import { useProver } from "@anon-aadhaar/react";
 import { useUserRole } from "../../../../stores/user-store";
 import { getCreditScore } from "../../../actions/getCreditScore";
+import { zkPassProofGen, getAttestation as getZkPassAttestation } from "../../../../lib/getProofs/zkPass";
+import { getProgram } from "../../../../lib/getProgram/attestationRegistry";
+import { reclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../lib/getProofs/reclaim";
+import { zkPassIssuerPubkey, plaidIssuerPubkey } from "../../../../lib/constants/issuers";
 
 export default function Apply() {
   const { role, isLoading } = useUserRole();
-  const { connected, publicKey } = useWallet();
+  const wallet = useWallet();
+  const { connected, publicKey } = wallet;
   const router = useRouter();
+  const program = getProgram();
 
   const [creditScore, setCreditScore] = useState<string | number>('--');
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [zkPassAttestation, setZkPassAttestation] = useState<any>(null);
+  const [reclaimAttestation, setReclaimAttestation] = useState<any>(null);
+  const [zkPassLoading, setZkPassLoading] = useState(false);
+  const [reclaimLoading, setReclaimLoading] = useState(false);
+  const [zkPassResult, setZkPassResult] = useState<any>(null);
+  const [reclaimResult, setReclaimResult] = useState<any>(null);
+  const [proofsLoading, setProofsLoading] = useState(true);
 
   const [anonAadhaar] = useAnonAadhaar();
   const [, latestProof] = useProver();
@@ -34,11 +47,24 @@ export default function Apply() {
 
 
   useEffect(() => {
-    if (!connected || !publicKey) return;
+    if (!connected || !publicKey) {
+      setProofsLoading(false);
+      return;
+    }
 
     (async () => {
+      setProofsLoading(true);
       const score = await getCreditScore(publicKey.toBase58());
       if (score !== null) setCreditScore(score);
+
+      const [zkPassAttestation, reclaimAttestation] = await Promise.all([
+        getZkPassAttestation({ address: publicKey.toBase58(), program: program! }),
+        getReclaimAttestation({ address: publicKey.toBase58(), program: program! })
+      ]);
+      
+      setZkPassAttestation(zkPassAttestation);
+      setReclaimAttestation(reclaimAttestation);
+      setProofsLoading(false);
     })();
   }, [connected, publicKey]);
 
@@ -65,12 +91,20 @@ export default function Apply() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
-  if (!connected) {
+  if (!connected || !publicKey || !program) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-foreground/70">
           Please connect your wallet to access this page.
         </p>
+      </div>
+    );
+  }
+
+  if (proofsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -123,41 +157,88 @@ export default function Apply() {
             </p>
           </motion.button>
 
-          <motion.button
+          <motion.div
             variants={itemVariants}
-            whileHover={{ scale: 1.03, y: -3, boxShadow: "0 8px 24px rgba(0, 186, 255, 0.3)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveModal("zkpass")}
-            className="w-full p-6 rounded-xl text-left border border-border/30 transition-all text-foreground backdrop-blur-md bg-gradient-to-br from-blue-400/5 to-emerald-400/5 hover:from-blue-400/10 hover:to-emerald-400/10"
+            onClick={() => !zkPassAttestation?.isValid && setActiveModal("zkpass")}
+            className={`w-full p-6 rounded-xl text-left border transition-all text-foreground backdrop-blur-md ${zkPassAttestation?.isValid
+              ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-green-500/10 cursor-default'
+              : 'border-border/30 bg-gradient-to-br from-blue-400/5 to-emerald-400/5 hover:from-blue-400/10 hover:to-emerald-400/10 cursor-pointer hover:border-blue-500/50'
+              }`}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <CreditCard className="w-5 h-5 text-blue-400" />
-              <span className="font-semibold text-foreground">
-                Generate zkPass Proofs
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  {zkPassAttestation?.isValid ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <CreditCard className="w-5 h-5 text-blue-400" />
+                  )}
+                  <span className="font-semibold text-foreground">
+                    {zkPassLoading ? 'Verifying...' : zkPassAttestation?.isValid ? 'zkPass Verified' : 'Verify with zkPass'}
+                  </span>
+                </div>
+                <p className="text-sm text-foreground/70">
+                  {zkPassAttestation?.isValid
+                    ? `Verified on ${new Date(zkPassAttestation.issuedAt).toLocaleDateString()} • Expires ${new Date(zkPassAttestation.expiryTs).toLocaleDateString()}`
+                    : 'Securely verify your information using zkPass.'
+                  }
+                </p>
+              </div>
+              {zkPassLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
+              ) : zkPassAttestation?.isValid ? (
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
+                    Active
+                  </div>
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                </div>
+              ) : (
+                <ArrowRight className="w-5 h-5 text-foreground/50" />
+              )}
             </div>
-            <p className="text-sm text-foreground/70">
-              Generate zero-knowledge proofs via zkPass for private verification.
-            </p>
-          </motion.button>
+          </motion.div>
 
-          <motion.button
+          <motion.div
             variants={itemVariants}
-            whileHover={{ scale: 1.03, y: -3, boxShadow: "0 8px 24px rgba(52, 211, 153, 0.3)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveModal("reclaim")}
-            className="w-full p-6 rounded-xl text-left border border-border/30 transition-all text-foreground backdrop-blur-md bg-gradient-to-br from-green-400/5 to-emerald-500/5 hover:from-green-400/10 hover:to-emerald-500/10"
+            onClick={() => !reclaimAttestation?.isValid && setActiveModal("reclaim")}
+            className={`w-full p-6 rounded-xl text-left border transition-all backdrop-blur-md ${reclaimAttestation?.isValid
+              ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-green-500/10 cursor-default'
+              : 'border-border/30 bg-gradient-to-br from-teal-400/5 to-emerald-400/5 hover:from-teal-400/10 hover:to-emerald-400/10 cursor-pointer hover:border-teal-500/50'}`}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <Shield className="w-5 h-5 text-green-400" />
-              <span className="font-semibold text-foreground">
-                Reclaim Plaid & CreditKarma Proofs
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  {reclaimAttestation?.isValid ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <CreditCard className="w-5 h-5 text-teal-400" />
+                  )}
+                  <span className="font-semibold text-foreground">
+                    {reclaimLoading ? 'Verifying...' : reclaimAttestation?.isValid ? 'Reclaim Verified' : 'Verify with Reclaim'}
+                  </span>
+                </div>
+                <p className="text-sm text-foreground/70">
+                  {reclaimAttestation?.isValid
+                    ? `Verified on ${new Date(reclaimAttestation.issuedAt).toLocaleDateString()} • Expires ${new Date(reclaimAttestation.expiryTs).toLocaleDateString()}`
+                    : 'Securely verify your information using Reclaim Protocol.'
+                  }
+                </p>
+              </div>
+              {reclaimLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-teal-400" />
+              ) : reclaimAttestation?.isValid ? (
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
+                    Active
+                  </div>
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                </div>
+              ) : (
+                <ArrowRight className="w-5 h-5 text-foreground/50" />
+              )}
             </div>
-            <p className="text-sm text-foreground/70">
-              Recover financial data to prove creditworthiness.
-            </p>
-          </motion.button>
+          </motion.div>
 
           <div className="text-center pt-4 text-sm text-foreground/70">
             Your current credit score:{" "}
@@ -178,7 +259,7 @@ export default function Apply() {
           >
             <motion.div
               onClick={(e) => e.stopPropagation()}
-              className="relative rounded-2xl p-8 w-[50%] h-[40%] bg-background/80 border border-border/40 shadow-2xl backdrop-blur-md overflow-y-hidden"
+              className="relative rounded-2xl p-6 w-[40%] max-w-2xl h-auto max-h-[80vh] bg-background/80 border border-border/40 shadow-2xl backdrop-blur-md overflow-y-auto"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -188,7 +269,7 @@ export default function Apply() {
                 <h2 className="text-2xl font-semibold text-foreground text-center">
                   {activeModal === "anon" && "Generate Anon Aadhaar Proofs"}
                   {activeModal === "zkpass" && "Generate ZK Pass Proofs"}
-                  {activeModal === "reclaim" && "Reclaim Financial Proofs"}
+                  {activeModal === "reclaim" && "Generate Reclaim Proofs"}
                 </h2>
 
                 <button
@@ -221,26 +302,187 @@ export default function Apply() {
                 </div>
               )}
               {activeModal === "zkpass" && (
-                <div className="space-y-5">
-                  <p className="text-sm text-foreground/70">
+                <div className="space-y-5 flex flex-col items-center">
+                  <p className="text-sm text-foreground/70 mt-2">
                     Create a zero-knowledge proof using zkPass for privacy-preserving verification.
                   </p>
 
-                  <button className="w-full py-3 rounded-lg border border-border text-foreground font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors">
-                    Generate Proof
-                  </button>
+                  {!zkPassResult ? (
+                    <button
+                      className="w-full py-3 rounded-lg border border-border text-foreground font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      onClick={async () => {
+                        setZkPassLoading(true);
+                        try {
+                          const result = await zkPassProofGen({ address: publicKey?.toBase58()!, program });
+                          setZkPassResult(result);
+                          if (result && result.success) {
+                            const attestation = await getZkPassAttestation({ 
+                              address: publicKey.toBase58(), 
+                              program,
+                              issuerPubkey: zkPassIssuerPubkey
+                            });
+                            setZkPassAttestation(attestation);
+                          }
+                        } finally {
+                          setZkPassLoading(false);
+                        }
+                      }}
+                      disabled={zkPassLoading}
+                    >
+                      {zkPassLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {zkPassLoading ? 'Generating Proof...' : 'Generate Proof'}
+                    </button>
+                  ) : (
+                    <div className="space-y-4">
+                      {zkPassResult.success ? (
+                        <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 space-y-2">
+                              <h3 className="font-semibold text-emerald-400">Proof Generated Successfully!</h3>
+                              <div className="text-sm text-foreground/70 space-y-1">
+                                <p className="break-all">
+                                  <span className="font-medium text-foreground">Transaction:</span>{' '}
+                                  <a
+                                    href={`https://explorer.solana.com/tx/${zkPassResult.signature}?cluster=devnet`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:underline"
+                                  >
+                                    {zkPassResult.signature?.slice(0, 8)}...{zkPassResult.signature?.slice(-8)}
+                                  </a>
+                                </p>
+                                <p className="break-all">
+                                  <span className="font-medium text-foreground">Attestation PDA:</span>{' '}
+                                  <span className="text-emerald-400">{zkPassResult.attestationPda}</span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                          <div className="flex items-start gap-3">
+                            <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-red-400">Proof Generation Failed</h3>
+                              <p className="text-sm text-foreground/70 mt-1">
+                                {zkPassResult.error?.message || 'An error occurred while generating the proof.'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        className="w-full py-2 rounded-lg border border-border text-foreground text-sm font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors"
+                        onClick={() => {
+                          setZkPassResult(null);
+                          if (zkPassResult.success) {
+                            setActiveModal(null);
+                          }
+                        }}
+                      >
+                        {zkPassResult.success ? 'Close' : 'Try Again'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
               {activeModal === "reclaim" && (
-                <div className="space-y-5">
-                  <p className="text-sm text-foreground/70">
+                <div className="space-y-5 flex flex-col items-center">
+                  <p className="text-sm text-foreground/70 mt-2">
                     Securely fetch your financial data from Plaid or CreditKarma to generate proofs.
                   </p>
 
-                  <button className="w-full py-3 rounded-lg border border-border text-foreground font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors">
-                    Reclaim Data
-                  </button>
+                  {!reclaimResult ? (
+                    <button
+                      className="w-full py-3 rounded-lg border border-border text-foreground font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      onClick={async () => {
+                        setReclaimLoading(true);
+                        try {
+                          const result = await reclaimProofGenPlaid({ 
+                            address: publicKey?.toBase58()!, 
+                            program 
+                          });
+                          setReclaimResult(result);
+                          if (result && result.success) {
+                            const attestation = await getReclaimAttestation({ 
+                              address: publicKey?.toBase58()!, 
+                              program,
+                              issuerPubkey: plaidIssuerPubkey
+                            });
+                            setReclaimAttestation(attestation);
+                          }
+                        } finally {
+                          setReclaimLoading(false);
+                        }
+                      }}
+                      disabled={reclaimLoading}
+                    >
+                      {reclaimLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {reclaimLoading ? 'Generating Proof...' : 'Generate Proof'}
+                    </button>
+                  ) : (
+                    <div className="space-y-4 w-full">
+                      {reclaimResult.success ? (
+                        <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 space-y-2">
+                              <h3 className="font-semibold text-emerald-400">Proof Generated Successfully!</h3>
+                              <div className="text-sm text-foreground/70 space-y-1">
+                                <p className="break-all">
+                                  <span className="font-medium text-foreground">Transaction:</span>{' '}
+                                  <a
+                                    href={`https://explorer.solana.com/tx/${reclaimResult.signature}?cluster=devnet`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:underline"
+                                  >
+                                    {reclaimResult.signature?.slice(0, 8)}...{reclaimResult.signature?.slice(-8)}
+                                  </a>
+                                </p>
+                                <p className="break-all">
+                                  <span className="font-medium text-foreground">Attestation PDA:</span>{' '}
+                                  <span className="text-emerald-400">{reclaimResult.attestationPda}</span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                          <div className="flex items-start gap-3">
+                            <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-red-400">Proof Generation Failed</h3>
+                              <p className="text-sm text-foreground/70 mt-1">
+                                {reclaimResult.error || 'An error occurred while generating the proof.'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        className="w-full py-2 rounded-lg border border-border text-foreground text-sm font-medium backdrop-blur-md bg-background/50 hover:bg-background/70 transition-colors"
+                        onClick={() => {
+                          setReclaimResult(null);
+                          if (reclaimResult?.success) {
+                            setActiveModal(null);
+                            // Refresh the credit score after successful verification
+                            if (publicKey) {
+                              getCreditScore(publicKey.toBase58()).then(score => {
+                                if (score !== null) setCreditScore(score);
+                              });
+                            }
+                          }
+                        }}
+                      >
+                        {reclaimResult.success ? 'Close' : 'Try Again'}
+                      </button>
+                    </div>
+                  )}
 
                   <div className="mt-4 text-sm text-foreground/70 text-center">
                     Current Credit Score: <span className="font-semibold text-foreground">{creditScore}</span>

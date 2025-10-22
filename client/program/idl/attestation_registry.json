@@ -1,0 +1,1300 @@
+{
+  "address": "86MykibNZvSLLZWj5jDg7gXViaqMANMeuUauP32xn8sq",
+  "metadata": {
+    "name": "attestation_registry",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "add_issuer",
+      "discriminator": [
+        252,
+        97,
+        3,
+        221,
+        65,
+        162,
+        177,
+        32
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "issuer",
+          "type": "pubkey"
+        },
+        {
+          "name": "issuer_type",
+          "type": {
+            "defined": {
+              "name": "IssuerType"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "add_schema",
+      "discriminator": [
+        133,
+        191,
+        60,
+        139,
+        221,
+        213,
+        46,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "schema",
+          "type": {
+            "defined": {
+              "name": "SchemaType"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_config",
+      "discriminator": [
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "max_expiry",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "post_attestation",
+      "discriminator": [
+        12,
+        75,
+        255,
+        83,
+        59,
+        171,
+        141,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "issuer"
+        },
+        {
+          "name": "subject"
+        },
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "schema_id",
+          "type": {
+            "defined": {
+              "name": "SchemaType"
+            }
+          }
+        },
+        {
+          "name": "claim_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "expiry_ts",
+          "type": "i64"
+        },
+        {
+          "name": "signature_bytes",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "recover_id",
+          "type": "u8"
+        },
+        {
+          "name": "allocator_from_proof",
+          "type": {
+            "array": [
+              "u8",
+              65
+            ]
+          }
+        },
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "remove_issuer",
+      "discriminator": [
+        0,
+        75,
+        88,
+        225,
+        4,
+        159,
+        167,
+        119
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "issuer",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "revoke_attestation",
+      "discriminator": [
+        12,
+        156,
+        103,
+        161,
+        194,
+        246,
+        211,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "subject"
+        },
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_admin",
+      "discriminator": [
+        251,
+        163,
+        0,
+        52,
+        91,
+        194,
+        187,
+        92
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_issuer_status",
+      "discriminator": [
+        31,
+        160,
+        75,
+        115,
+        119,
+        98,
+        91,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "issuer",
+          "type": "pubkey"
+        },
+        {
+          "name": "enabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "set_max_expiry",
+      "discriminator": [
+        160,
+        189,
+        97,
+        86,
+        209,
+        226,
+        190,
+        104
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "max_expiry",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_paused",
+      "discriminator": [
+        91,
+        60,
+        125,
+        192,
+        176,
+        225,
+        166,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "update_expiry",
+      "discriminator": [
+        137,
+        72,
+        245,
+        243,
+        100,
+        25,
+        17,
+        25
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "subject"
+        },
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_expiry",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Attestation",
+      "discriminator": [
+        152,
+        125,
+        183,
+        86,
+        36,
+        146,
+        121,
+        73
+      ]
+    },
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AdminChanged",
+      "discriminator": [
+        232,
+        34,
+        31,
+        226,
+        62,
+        18,
+        19,
+        114
+      ]
+    },
+    {
+      "name": "AttestationExpiryUpdated",
+      "discriminator": [
+        199,
+        104,
+        246,
+        172,
+        52,
+        177,
+        28,
+        116
+      ]
+    },
+    {
+      "name": "AttestationPosted",
+      "discriminator": [
+        142,
+        97,
+        81,
+        56,
+        69,
+        155,
+        19,
+        243
+      ]
+    },
+    {
+      "name": "AttestationRevoked",
+      "discriminator": [
+        47,
+        106,
+        65,
+        238,
+        200,
+        127,
+        163,
+        50
+      ]
+    },
+    {
+      "name": "ConfigInitialized",
+      "discriminator": [
+        181,
+        49,
+        200,
+        156,
+        19,
+        167,
+        178,
+        91
+      ]
+    },
+    {
+      "name": "IssuerAdded",
+      "discriminator": [
+        209,
+        200,
+        242,
+        175,
+        69,
+        177,
+        80,
+        190
+      ]
+    },
+    {
+      "name": "IssuerRemoved",
+      "discriminator": [
+        53,
+        135,
+        144,
+        62,
+        36,
+        70,
+        245,
+        230
+      ]
+    },
+    {
+      "name": "IssuerStatusChanged",
+      "discriminator": [
+        130,
+        171,
+        24,
+        46,
+        255,
+        61,
+        237,
+        157
+      ]
+    },
+    {
+      "name": "MaxExpiryChanged",
+      "discriminator": [
+        225,
+        53,
+        169,
+        52,
+        122,
+        44,
+        117,
+        85
+      ]
+    },
+    {
+      "name": "PauseChanged",
+      "discriminator": [
+        238,
+        188,
+        213,
+        78,
+        134,
+        209,
+        178,
+        218
+      ]
+    },
+    {
+      "name": "SchemaAdded",
+      "discriminator": [
+        78,
+        67,
+        86,
+        69,
+        239,
+        185,
+        88,
+        81
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Paused",
+      "msg": "The registry is paused"
+    },
+    {
+      "code": 6001,
+      "name": "IssuerNotFound",
+      "msg": "Issuer not found in registry"
+    },
+    {
+      "code": 6002,
+      "name": "IssuerAlreadyExists",
+      "msg": "Issuer already exists"
+    },
+    {
+      "code": 6003,
+      "name": "IssuerDisabled",
+      "msg": "Issuer is disabled"
+    },
+    {
+      "code": 6004,
+      "name": "TooManyIssuers",
+      "msg": "Too many issuers"
+    },
+    {
+      "code": 6005,
+      "name": "SchemaNotAllowed",
+      "msg": "Schema not allowed"
+    },
+    {
+      "code": 6006,
+      "name": "SchemaNotFound",
+      "msg": "Schema not found"
+    },
+    {
+      "code": 6007,
+      "name": "SchemaAlreadyExists",
+      "msg": "Schema already exists"
+    },
+    {
+      "code": 6008,
+      "name": "TooManySchemas",
+      "msg": "Too many schemas"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidExpiry",
+      "msg": "Invalid expiry timestamp"
+    },
+    {
+      "code": 6010,
+      "name": "ExpiryTooFar",
+      "msg": "Expiry timestamp is too far in the future"
+    },
+    {
+      "code": 6011,
+      "name": "AlreadyRevoked",
+      "msg": "Attestation already revoked"
+    },
+    {
+      "code": 6012,
+      "name": "Unauthorized",
+      "msg": "Unauthorized: must be issuer or admin"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidAdmin",
+      "msg": "Invalid admin address"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidSignature",
+      "msg": "Invalid signature"
+    },
+    {
+      "code": 6015,
+      "name": "UnsupportedIssuerType",
+      "msg": "Unsupported issuer type"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidPublicKey",
+      "msg": "Invalid Public Key"
+    }
+  ],
+  "types": [
+    {
+      "name": "AdminChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "old_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_admin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Attestation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subject",
+            "type": "pubkey"
+          },
+          {
+            "name": "schema_id",
+            "type": {
+              "defined": {
+                "name": "SchemaType"
+              }
+            }
+          },
+          {
+            "name": "claim_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "issued_at",
+            "type": "i64"
+          },
+          {
+            "name": "expiry_ts",
+            "type": "i64"
+          },
+          {
+            "name": "revoked",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttestationExpiryUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subject",
+            "type": "pubkey"
+          },
+          {
+            "name": "schema_id",
+            "type": {
+              "defined": {
+                "name": "SchemaType"
+              }
+            }
+          },
+          {
+            "name": "new_expiry_ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttestationPosted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subject",
+            "type": "pubkey"
+          },
+          {
+            "name": "schema_id",
+            "type": {
+              "defined": {
+                "name": "SchemaType"
+              }
+            }
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "claim_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "expiry_ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttestationRevoked",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subject",
+            "type": "pubkey"
+          },
+          {
+            "name": "schema_id",
+            "type": {
+              "defined": {
+                "name": "SchemaType"
+              }
+            }
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_expiry_secs",
+            "type": "i64"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "issuers",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Issuer"
+                }
+              }
+            }
+          },
+          {
+            "name": "schemas",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "SchemaType"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfigInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_expiry_secs",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Issuer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer_type",
+            "type": {
+              "defined": {
+                "name": "IssuerType"
+              }
+            }
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IssuerAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IssuerRemoved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IssuerStatusChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IssuerType",
+      "repr": {
+        "kind": "rust"
+      },
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Solana"
+          },
+          {
+            "name": "Ethereum"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MaxExpiryChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "max_expiry_secs",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PauseChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "paused",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SchemaAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "schema",
+            "type": {
+              "defined": {
+                "name": "SchemaType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SchemaType",
+      "repr": {
+        "kind": "rust"
+      },
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "AnonAadhaar"
+          },
+          {
+            "name": "ZkPassIdentity"
+          },
+          {
+            "name": "Uniqueness"
+          },
+          {
+            "name": "CreditKarmaScore"
+          },
+          {
+            "name": "PlaidIncome"
+          },
+          {
+            "name": "Custom"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 import { Connection } from '@solana/web3.js';
 
 // Using devnet for development
-const DEVNET_RPC = 'https://api.devnet.solana.com';
+const DEVNET_RPC = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.devnet.solana.com';
 
 export const connection = new Connection(DEVNET_RPC, {
     commitment: 'confirmed',
