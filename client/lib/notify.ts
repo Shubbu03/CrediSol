@@ -2,7 +2,18 @@ import toast from "react-hot-toast";
 
 export type NotificationType = "success" | "error" | "warn" | "info";
 
-export const notify = (message: string, type: NotificationType = "info") => {
+export interface NotifyOptions {
+    title?: string;
+    description: string;
+    type?: NotificationType;
+}
+
+export const notify = (options: string | NotifyOptions) => {
+    const { title, description, type = "info" } = typeof options === 'string'
+        ? { description: options, type: "info" as NotificationType }
+        : options;
+
+    const message = title ? `${title}: ${description}` : description;
     const baseStyle = {
         fontWeight: "500",
         borderRadius: "12px",
@@ -18,44 +29,42 @@ export const notify = (message: string, type: NotificationType = "info") => {
                 style: {
                     ...baseStyle,
                     background: "#000000",
-                    color: "#F2F2F2",
-                    border: "1px solid #B6B09F",
+                    color: "#ffffff",
+                },
+                iconTheme: {
+                    primary: "#10B981",
+                    secondary: "#ffffff",
                 },
             });
-
         case "error":
             return toast.error(message, {
-                duration: 5000,
+                duration: 4000,
                 position: "bottom-right",
                 style: {
                     ...baseStyle,
-                    background: "#EF4444",
-                    color: "#FFFFFF",
+                    background: "#FEE2E2",
+                    color: "#B91C1C",
                 },
             });
-
         case "warn":
             return toast(message, {
                 duration: 4000,
                 position: "bottom-right",
-                icon: "⚠️",
                 style: {
                     ...baseStyle,
-                    background: "#F59E0B",
-                    color: "#FFFFFF",
+                    background: "#FEF3C7",
+                    color: "#B45309",
                 },
+                icon: "⚠️",
             });
-
-        case "info":
         default:
             return toast(message, {
-                duration: 3000,
+                duration: 4000,
                 position: "bottom-right",
-                icon: "ℹ️",
                 style: {
                     ...baseStyle,
-                    background: "#B6B09F",
-                    color: "#000000",
+                    background: "#E0F2FE",
+                    color: "#0369A1",
                 },
             });
     }

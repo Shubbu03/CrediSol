@@ -18,6 +18,7 @@ import { zkPassProofGen, getAttestation as getZkPassAttestation } from "../../..
 import { getProgram } from "../../../../lib/getProgram/attestationRegistry";
 import { reclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../lib/getProofs/reclaim";
 import { zkPassIssuerPubkey, plaidIssuerPubkey } from "../../../../lib/constants/issuers";
+import { CreateLoanForm } from "../../../../components/borrower/CreateLoanForm";
 
 export default function Apply() {
   const { role, isLoading } = useUserRole();
@@ -300,10 +301,24 @@ export default function Apply() {
             </div>
           </motion.div>
 
-          <div className="text-center pt-4 text-sm text-foreground/70">
+          <div className="text-center pt-4 text-sm text-foreground/70 mb-8">
             Your current credit score:{" "}
             <span className="font-semibold text-foreground">{creditScore}</span>
           </div>
+
+          <motion.div
+            variants={itemVariants}
+            className="w-full p-6 rounded-xl border border-border/30 bg-background/80 backdrop-blur-md"
+          >
+            <CreateLoanForm 
+              isVerified={
+                anonAadhaarStatus === 'logged-in' && 
+                zkPassAttestation?.isValid && 
+                reclaimAttestation?.isValid
+              }
+              creditScore={typeof creditScore === 'number' ? creditScore : 0}
+            />
+          </motion.div>
         </motion.div>
       </div>
 
