@@ -71,24 +71,24 @@ export const zkPassProofGen = async ({ address, program }: {
         const plaintext = borsh.serialize(zkPassTaskSchema as any, message);
         const plaintextHash = Buffer.from(sha3.keccak_256.digest(Buffer.from(plaintext)));
         const pubKey = secp256k1.ecdsaRecover(signatureBytes, recoverId, plaintextHash, false);
-        const pubkeyHash = sha3.keccak_256.create();
-        pubkeyHash.update(pubKey.slice(1));
-        const hashed = Buffer.from(pubkeyHash.digest());
-        const recoveredAddressBytes = hashed.slice(-20);
-        const recoveredAddress = recoveredAddressBytes.toString("hex").toLowerCase();
-        const allocatorFromProof = res.allocatorAddress.replace(/^0x/, "").toLowerCase();
+        // const pubkeyHash = sha3.keccak_256.create();
+        // pubkeyHash.update(pubKey.slice(1));
+        // const hashed = Buffer.from(pubkeyHash.digest());
+        // const recoveredAddressBytes = hashed.slice(-20);
+        // const recoveredAddress = recoveredAddressBytes.toString("hex").toLowerCase();
+        // const allocatorFromProof = res.allocatorAddress.replace(/^0x/, "").toLowerCase();
 
-        const isValid = recoveredAddress === allocatorFromProof;
-        if (isValid) {
-            alert("Proof generated successfully");
-        } else {
-            alert("Proof generation failed");
-        }
+        // const isValid = recoveredAddress === allocatorFromProof;
+        // if (isValid) {
+        //     alert("Proof generated successfully");
+        // } else {
+        //     alert("Proof generation failed");
+        // }
 
         console.log("zkPass proof result:", res);
 
         const now = Math.floor(Date.now() / 1000);
-        const expiryTs = now + 3500;
+        const expiryTs = now + 24 * 7 * 60 * 60 - 200;
         const schemaIdIndex = 1;
 
         if (!program) return;
@@ -102,9 +102,6 @@ export const zkPassProofGen = async ({ address, program }: {
             ],
             program.programId
         );
-
-        console.log("Attestation PDA:", attestationPda.toBase58());
-        console.log("zkPass Issuer Pubkey:", zkPassIssuerPubkey.toBase58());
 
         const [configPda] = PublicKey.findProgramAddressSync(
             [Buffer.from("attest_config")],
@@ -176,7 +173,6 @@ export const getAttestation = async ({
             program.programId
         );
 
-        console.log("Fetching attestation at PDA:", attestationPda.toBase58());
 
         const attestationAccount = await program.account.attestation.fetchNullable(
             attestationPda

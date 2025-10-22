@@ -4,10 +4,10 @@ import { useWallet } from "@solana/wallet-adapter-react";
 
 import type { AttestationRegistry } from "../../program/types/attestation_registry";
 import idl from "../../program/idl/attestation_registry.json";
+import { connection } from "../solana/connection";
 
 export const getProgram = () => {
     const { wallet, signTransaction, signAllTransactions, publicKey } = useWallet();
-    const connection = new Connection(clusterApiUrl("devnet"));
 
     if (!wallet || !publicKey || !signTransaction || !signAllTransactions) return null;
 

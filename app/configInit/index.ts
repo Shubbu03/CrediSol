@@ -41,24 +41,24 @@ async function initializeConfig(maxExpirySecs: number) {
 //     .catch((err) => console.error(err));
 
 async function addIssuer() {
-    const zkAllocatorADdress = "0x19a567b3b212a5b35bA0E3B600FbEd5c2eE9083d";
-    const ethAddressBytes1 = Buffer.from(zkAllocatorADdress.slice(2), "hex");
-    const padded1 = Buffer.concat([Buffer.alloc(12), ethAddressBytes1]); // 32 bytes
-    const zkPassIssuerPubkey = new PublicKey(padded1);
+    // const zkAllocatorADdress = "0x19a567b3b212a5b35bA0E3B600FbEd5c2eE9083d";
+    // const ethAddressBytes1 = Buffer.from(zkAllocatorADdress.slice(2), "hex");
+    // const padded1 = Buffer.concat([Buffer.alloc(12), ethAddressBytes1]); // 32 bytes
+    // const zkPassIssuerPubkey = new PublicKey(padded1);
 
-    await program.methods
-        .addIssuer(zkPassIssuerPubkey, { ethereum: {} })
-        .accounts({
-            config: configPda,
-            admin: admin.publicKey,
-        })
-        .signers([admin])
-        .rpc();
+    // await program.methods
+    //     .addIssuer(zkPassIssuerPubkey, { ethereum: {} })
+    //     .accounts({
+    //         config: configPda,
+    //         admin: admin.publicKey,
+    //     })
+    //     .signers([admin])
+    //     .rpc();
 
-    console.log("Issuer added at:", zkPassIssuerPubkey.toBase58());
+    // console.log("Issuer added at:", zkPassIssuerPubkey.toBase58());
 
-    const reclaimOwner = "0x7af75fb20c6a3ad403c568430f3cab891c961191";
-    const ethAddressBytes = Buffer.from(reclaimOwner.slice(2), "hex");
+    const reclaimIdentifier = "0xdec977493c546ac87206192de85ff8ee431a4167b70bf3d5ef31376de3d268e6";
+    const ethAddressBytes = Buffer.from(reclaimIdentifier.slice(2), "hex");
     const padded = Buffer.concat([Buffer.alloc(12), ethAddressBytes]);
     const plaidIssuerPubkey = new anchor.web3.PublicKey(padded);
 

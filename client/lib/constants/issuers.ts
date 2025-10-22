@@ -8,10 +8,10 @@ export function ethAddressToSolanaPublicKey(ethAddress: string): PublicKey {
 }
 
 export const ZKPASS_ALLOCATOR_ADDRESS = "0x19a567b3b212a5b35bA0E3B600FbEd5c2eE9083d";
-export const RECLAIM_OWNER_ADDRESS = "0x7af75fb20c6a3ad403c568430f3cab891c961191";
+export const RECLAIM_IDENTIFIER = "0xdec977493c546ac87206192de85ff8ee431a4167b70bf3d5ef31376de3d268e6";
 
 export const zkPassIssuerPubkey = ethAddressToSolanaPublicKey(ZKPASS_ALLOCATOR_ADDRESS);
-export const plaidIssuerPubkey = ethAddressToSolanaPublicKey(RECLAIM_OWNER_ADDRESS);
+export const plaidIssuerPubkey = ethAddressToSolanaPublicKey(RECLAIM_IDENTIFIER);
 
 export const ISSUERS = {
     zkPass: {
@@ -19,7 +19,7 @@ export const ISSUERS = {
         solanaPublicKey: zkPassIssuerPubkey,
     },
     plaid: {
-        ethAddress: RECLAIM_OWNER_ADDRESS,
+        ethAddress: RECLAIM_IDENTIFIER,
         solanaPublicKey: plaidIssuerPubkey,
     },
 } as const;
