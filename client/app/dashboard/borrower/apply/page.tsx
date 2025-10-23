@@ -17,6 +17,7 @@ import { getCreditScore } from "../../../actions/getCreditScore";
 import { zkPassProofGen, getAttestation as getZkPassAttestation } from "../../../../lib/getProofs/zkPass";
 import { getProgram } from "../../../../lib/getProgram/attestationRegistry";
 import { reclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../lib/getProofs/reclaim";
+import { ScoreAttestationCard } from "../../../../components/score-attestor/score-attestation-card";
 import { zkPassIssuerPubkey, plaidIssuerPubkey } from "../../../../lib/constants/issuers";
 
 export default function Apply() {
@@ -35,6 +36,7 @@ export default function Apply() {
   const [zkPassResult, setZkPassResult] = useState<any>(null);
   const [reclaimResult, setReclaimResult] = useState<any>(null);
   const [proofsLoading, setProofsLoading] = useState(true);
+  const [scoreAttestationData, setScoreAttestationData] = useState<any>(null);
 
   const [anonAadhaar] = useAnonAadhaar();
   const [, latestProof] = useProver();
@@ -61,7 +63,7 @@ export default function Apply() {
         getZkPassAttestation({ address: publicKey.toBase58(), program: program! }),
         getReclaimAttestation({ address: publicKey.toBase58(), program: program! })
       ]);
-      
+
       setZkPassAttestation(zkPassAttestation);
       setReclaimAttestation(reclaimAttestation);
       setProofsLoading(false);
@@ -125,7 +127,14 @@ export default function Apply() {
             <div className="flex items-center gap-4">
               <div className="px-3 py-1 bg-neutral-800 text-white text-sm font-medium rounded-full shadow">
                 Credit Score:{" "}
-                <span className="font-bold ml-1">{creditScore}</span>
+                <span className="font-bold ml-1">
+                  {scoreAttestationData?.score || creditScore}
+                </span>
+                {scoreAttestationData && (
+                  <span className="ml-2 px-2 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                    ✓
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -240,9 +249,22 @@ export default function Apply() {
             </div>
           </motion.div>
 
+          <motion.div variants={itemVariants}>
+            <ScoreAttestationCard
+              onAttestationComplete={setScoreAttestationData}
+            />
+          </motion.div>
+
           <div className="text-center pt-4 text-sm text-foreground/70">
             Your current credit score:{" "}
-            <span className="font-semibold text-foreground">{creditScore}</span>
+            <span className="font-semibold text-foreground">
+              {scoreAttestationData?.score || creditScore}
+            </span>
+            {scoreAttestationData && (
+              <span className="ml-2 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
+                Attested
+              </span>
+            )}
           </div>
         </motion.div>
       </div>
@@ -316,8 +338,8 @@ export default function Apply() {
                           const result = await zkPassProofGen({ address: publicKey?.toBase58()!, program });
                           setZkPassResult(result);
                           if (result && result.success) {
-                            const attestation = await getZkPassAttestation({ 
-                              address: publicKey.toBase58(), 
+                            const attestation = await getZkPassAttestation({
+                              address: publicKey.toBase58(),
                               program,
                               issuerPubkey: zkPassIssuerPubkey
                             });
@@ -401,14 +423,14 @@ export default function Apply() {
                       onClick={async () => {
                         setReclaimLoading(true);
                         try {
-                          const result = await reclaimProofGenPlaid({ 
-                            address: publicKey?.toBase58()!, 
-                            program 
+                          const result = await reclaimProofGenPlaid({
+                            address: publicKey?.toBase58()!,
+                            program
                           });
                           setReclaimResult(result);
                           if (result && result.success) {
-                            const attestation = await getReclaimAttestation({ 
-                              address: publicKey?.toBase58()!, 
+                            const attestation = await getReclaimAttestation({
+                              address: publicKey?.toBase58()!,
                               program,
                               issuerPubkey: plaidIssuerPubkey
                             });

@@ -31,6 +31,9 @@ export type LoanSummary = {
     totalRepaidInterest: number;
     // Computed fields for UI
     creditScore?: number;
+    creditScoreAttested?: boolean;
+    creditScoreGrade?: number;
+    creditScoreExpiry?: number;
     termMonths: number;
     aprBps: number;
     collateralPct: number;
@@ -71,6 +74,7 @@ function applyFilters(loans: LoanSummary[], filters: FilterState): LoanSummary[]
 
 export function useLoansList() {
     const program = useLoansProgram();
+    const scoreProgram = useScoreAttestorProgram();
     const filters = useLoanFiltersStore();
 
     return useQuery({
@@ -82,32 +86,59 @@ export function useLoansList() {
             }
             try {
                 const loans = await (program.account as any).loanAccount.all();
-                const mappedLoans: LoanSummary[] = loans.map((loan: any) => ({
-                    id: loan.publicKey.toBase58(),
-                    borrower: loan.account.borrower.toBase58(),
-                    loanId: loan.account.loanId.toNumber(),
-                    amount: loan.account.amount.toNumber(),
-                    termSecs: loan.account.termSecs.toNumber(),
-                    maxAprBps: loan.account.maxAprBps,
-                    minCollateralBps: loan.account.minCollateralBps,
-                    fundingDeadline: loan.account.fundingDeadline.toNumber(),
-                    state: loan.account.state,
-                    fundedAmount: loan.account.fundedAmount.toNumber(),
-                    collateralAmount: loan.account.collateralAmount.toNumber(),
-                    actualAprBps: loan.account.actualAprBps,
-                    startTs: loan.account.startTs.toNumber(),
-                    dueTs: loan.account.dueTs.toNumber(),
-                    lastAccrualTs: loan.account.lastAccrualTs.toNumber(),
-                    accruedInterest: loan.account.accruedInterest.toNumber(),
-                    outstandingPrincipal: loan.account.outstandingPrincipal.toNumber(),
-                    totalRepaidPrincipal: loan.account.totalRepaidPrincipal.toNumber(),
-                    totalRepaidInterest: loan.account.totalRepaidInterest.toNumber(),
-                    // Computed fields for UI
-                    creditScore: undefined, // Will be fetched separately via useCreditScore hook
-                    termMonths: loan.account.termSecs.toNumber() / (30 * 24 * 60 * 60),
-                    aprBps: loan.account.maxAprBps,
-                    collateralPct: loan.account.minCollateralBps / 100,
-                    targetAmount: loan.account.amount.toNumber(),
+                const mappedLoans: LoanSummary[] = await Promise.all(loans.map(async (loan: any) => {
+                    // Try to fetch attested score
+                    let creditScoreData = null;
+                    if (scoreProgram) {
+                        try {
+                            const borrowerPubkey = loan.account.borrower;
+                            const loanPubkey = loan.publicKey;
+                            const scoreAttestationPda = useScoreAttestationPda(borrowerPubkey, loanPubkey);
+                            // const scoreAttestation = await scoreProgram.account.scoreAttestation.fetch(scoreAttestationPda);
+                            const scoreAttestation = await (scoreProgram.account as any).scoreAttestation.fetch(scoreAttestationPda);
+
+                            creditScoreData = {
+                                score: scoreAttestation.score,
+                                attested: !scoreAttestation.revoked && scoreAttestation.expiryTs.toNumber() > Math.floor(Date.now() / 1000),
+                                grade: scoreAttestation.grade,
+                                expiry: scoreAttestation.expiryTs.toNumber(),
+                            };
+                        } catch (err) {
+                            // Score attestation doesn't exist or failed to fetch
+                            console.log('No attested score found for loan:', loan.publicKey.toBase58());
+                        }
+                    }
+
+                    return {
+                        id: loan.publicKey.toBase58(),
+                        borrower: loan.account.borrower.toBase58(),
+                        loanId: loan.account.loanId.toNumber(),
+                        amount: loan.account.amount.toNumber(),
+                        termSecs: loan.account.termSecs.toNumber(),
+                        maxAprBps: loan.account.maxAprBps,
+                        minCollateralBps: loan.account.minCollateralBps,
+                        fundingDeadline: loan.account.fundingDeadline.toNumber(),
+                        state: loan.account.state,
+                        fundedAmount: loan.account.fundedAmount.toNumber(),
+                        collateralAmount: loan.account.collateralAmount.toNumber(),
+                        actualAprBps: loan.account.actualAprBps,
+                        startTs: loan.account.startTs.toNumber(),
+                        dueTs: loan.account.dueTs.toNumber(),
+                        lastAccrualTs: loan.account.lastAccrualTs.toNumber(),
+                        accruedInterest: loan.account.accruedInterest.toNumber(),
+                        outstandingPrincipal: loan.account.outstandingPrincipal.toNumber(),
+                        totalRepaidPrincipal: loan.account.totalRepaidPrincipal.toNumber(),
+                        totalRepaidInterest: loan.account.totalRepaidInterest.toNumber(),
+                        // Computed fields for UI
+                        creditScore: creditScoreData?.score,
+                        creditScoreAttested: creditScoreData?.attested,
+                        creditScoreGrade: creditScoreData?.grade,
+                        creditScoreExpiry: creditScoreData?.expiry,
+                        termMonths: loan.account.termSecs.toNumber() / (30 * 24 * 60 * 60),
+                        aprBps: loan.account.maxAprBps,
+                        collateralPct: loan.account.minCollateralBps / 100,
+                        targetAmount: loan.account.amount.toNumber(),
+                    };
                 }));
                 return applyFilters(mappedLoans, filters);
             } catch (error) {

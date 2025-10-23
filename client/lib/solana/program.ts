@@ -26,7 +26,7 @@ export function useScoreAttestorConfigPda() {
 
 export function useScoreAttestationPda(subject: PublicKey, loan: PublicKey) {
     return PublicKey.findProgramAddressSync(
-        [Buffer.from("score_attestation"), subject.toBuffer(), loan.toBuffer()],
+        [Buffer.from("score"), subject.toBuffer(), loan.toBuffer()],
         SCORE_ATTESTOR_PROGRAM_ID
     )[0];
 }
