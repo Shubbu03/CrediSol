@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/attestation_registry.json`.
  */
 export type AttestationRegistry = {
-  "address": "86MykibNZvSLLZWj5jDg7gXViaqMANMeuUauP32xn8sq",
+  "address": "AQ4NQuyNkn9cmDmNpc3HzepHahPM8fWP255pHqrzWPBr",
   "metadata": {
     "name": "attestationRegistry",
     "version": "0.1.0",

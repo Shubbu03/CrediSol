@@ -11,7 +11,7 @@ pub use event::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("BTH9yYvKRBZHXJAPuv724mCMiDcjcnCqef7rDdSZUJWf");
+declare_id!("5CsJHgdh6jtKRVJiJL4bBpTeUcUFV3B9gphEccyvGQmS");
 
 #[program]
 pub mod loans_marketplace {

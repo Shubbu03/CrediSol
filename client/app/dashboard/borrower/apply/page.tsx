@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Shield, CreditCard, X, CheckCircle2, Loader2 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -14,10 +14,11 @@ import {
 import { useProver } from "@anon-aadhaar/react";
 import { useUserRole } from "../../../../stores/user-store";
 import { getCreditScore } from "../../../actions/getCreditScore";
-import { zkPassProofGen, getAttestation as getZkPassAttestation } from "../../../../lib/getProofs/zkPass";
-import { getProgram } from "../../../../lib/getProgram/attestationRegistry";
-import { reclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../lib/getProofs/reclaim";
+import { useZkPassProofGen, getAttestation as getZkPassAttestation } from "../../../../hooks/use-proof/zkPass";
+import { useAttesttationRegistryProgram as getProgram } from "../../../../hooks/use-get-program";
+import { useReclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../hooks/use-proof/reclaim";
 import { zkPassIssuerPubkey, plaidIssuerPubkey } from "../../../../lib/constants/issuers";
+import { CreateLoanForm } from "../../../../components/borrower/CreateLoanForm";
 
 export default function Apply() {
   const { role, isLoading } = useUserRole();
@@ -35,9 +36,37 @@ export default function Apply() {
   const [zkPassResult, setZkPassResult] = useState<any>(null);
   const [reclaimResult, setReclaimResult] = useState<any>(null);
   const [proofsLoading, setProofsLoading] = useState(true);
+  const [anonAadhaarStatus, setAnonAadhaarStatus] = useState<string>('not-logged-in');
+  const [anonAadhaarExpiry, setAnonAadhaarExpiry] = useState<number | null>(null);
 
   const [anonAadhaar] = useAnonAadhaar();
   const [, latestProof] = useProver();
+
+  useEffect(() => {
+    const storedStatus = localStorage.getItem('anonAadhaarStatus');
+    const storedExpiry = localStorage.getItem('anonAadhaarExpiry');
+
+    if (storedStatus && storedExpiry) {
+      const expiryTime = parseInt(storedExpiry, 10);
+      if (Date.now() < expiryTime) {
+        setAnonAadhaarStatus(storedStatus);
+        setAnonAadhaarExpiry(expiryTime);
+      } else {
+        localStorage.removeItem('anonAadhaarStatus');
+        localStorage.removeItem('anonAadhaarExpiry');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (anonAadhaar?.status === 'logged-in' && latestProof) {
+      const expiryTime = Date.now() + (7 * 24 * 60 * 60 * 1000);
+      localStorage.setItem('anonAadhaarStatus', 'logged-in');
+      localStorage.setItem('anonAadhaarExpiry', expiryTime.toString());
+      setAnonAadhaarStatus('logged-in');
+      setAnonAadhaarExpiry(expiryTime);
+    }
+  }, [anonAadhaar?.status, latestProof]);
 
   useEffect(() => {
     if (!isLoading && role && role !== "borrower") {
@@ -61,7 +90,7 @@ export default function Apply() {
         getZkPassAttestation({ address: publicKey.toBase58(), program: program! }),
         getReclaimAttestation({ address: publicKey.toBase58(), program: program! })
       ]);
-      
+
       setZkPassAttestation(zkPassAttestation);
       setReclaimAttestation(reclaimAttestation);
       setProofsLoading(false);
@@ -109,6 +138,18 @@ export default function Apply() {
     );
   }
 
+  const handleCloseModal = () => {
+    setActiveModal(null);
+    const storedStatus = localStorage.getItem('anonAadhaarStatus');
+    const storedExpiry = localStorage.getItem('anonAadhaarExpiry');
+    if (storedStatus) {
+      setAnonAadhaarStatus(storedStatus);
+    }
+    if (storedExpiry) {
+      setAnonAadhaarExpiry(parseInt(storedExpiry, 10));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b border-border bg-background/80 backdrop-blur-sm">
@@ -139,23 +180,43 @@ export default function Apply() {
           animate="visible"
           className="space-y-6"
         >
-          <motion.button
+          <motion.div
             variants={itemVariants}
-            whileHover={{ scale: 1.03, y: -3, boxShadow: "0 8px 24px rgba(128, 90, 250, 0.3)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveModal("anon")}
-            className="w-full p-6 rounded-xl text-left border border-border/30 transition-all text-foreground backdrop-blur-md bg-gradient-to-br from-violet-500/5 to-blue-500/5 hover:from-violet-500/10 hover:to-blue-500/10"
+            className={`w-full p-6 rounded-xl text-left border transition-all backdrop-blur-md ${anonAadhaarStatus === 'logged-in'
+              ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-green-500/10 cursor-default'
+              : 'border-border/30 bg-gradient-to-br from-violet-500/5 to-blue-500/5 hover:from-violet-500/10 hover:to-blue-500/10 cursor-pointer hover:border-violet-500/50'}`}
+            onClick={() => anonAadhaarStatus !== 'logged-in' && setActiveModal("anon")}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <ArrowRight className="w-5 h-5 text-violet-400" />
-              <span className="font-semibold text-foreground">
-                Generate Anon Aadhar Proofs
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  {anonAadhaarStatus === 'logged-in' ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <Shield className="w-5 h-5 text-violet-400" />
+                  )}
+                  <span className="font-semibold text-foreground">
+                    {anonAadhaarStatus === 'logged-in' ? 'Anon Aadhaar Verified' : 'Generate Anon Aadhaar Proofs'}
+                  </span>
+                </div>
+                <p className="text-sm text-foreground/70">
+                  {anonAadhaarStatus === 'logged-in' && anonAadhaarExpiry
+                    ? `Expires ${new Date(anonAadhaarExpiry).toLocaleDateString()}`
+                    : 'Generate anonymous Aadhaar verification proofs for loan applications.'}
+                </p>
+              </div>
+              {anonAadhaarStatus === 'logged-in' ? (
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
+                    Active
+                  </div>
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                </div>
+              ) : (
+                <ArrowRight className="w-5 h-5 text-foreground/50" />
+              )}
             </div>
-            <p className="text-sm text-foreground/70">
-              Generate anonymous Aadhar verification proofs for loan applications.
-            </p>
-          </motion.button>
+          </motion.div>
 
           <motion.div
             variants={itemVariants}
@@ -240,10 +301,23 @@ export default function Apply() {
             </div>
           </motion.div>
 
-          <div className="text-center pt-4 text-sm text-foreground/70">
+          <div className="text-center pt-4 text-sm text-foreground/70 mb-8">
             Your current credit score:{" "}
             <span className="font-semibold text-foreground">{creditScore}</span>
           </div>
+
+          <motion.div
+            variants={itemVariants}
+            className="w-full p-6 rounded-xl border border-border/30 bg-background/80 backdrop-blur-md"
+          >
+            <CreateLoanForm 
+              isVerified={
+                zkPassAttestation?.isValid && 
+                reclaimAttestation?.isValid
+              }
+              creditScore={typeof creditScore === 'number' ? creditScore : 0}
+            />
+          </motion.div>
         </motion.div>
       </div>
 
@@ -255,11 +329,11 @@ export default function Apply() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setActiveModal(null)}
+            onClick={handleCloseModal}
           >
             <motion.div
               onClick={(e) => e.stopPropagation()}
-              className="relative rounded-2xl p-6 w-[40%] max-w-2xl h-auto max-h-[80vh] bg-background/80 border border-border/40 shadow-2xl backdrop-blur-md overflow-y-auto"
+              className="relative rounded-2xl p-6 w-[40%] max-w-2xl min-h-[800px] max-h-[90vh] bg-background/80 border border-border/40 shadow-2xl backdrop-blur-md overflow-y-auto"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -274,13 +348,13 @@ export default function Apply() {
 
                 <button
                   className="absolute right-0 text-foreground/50 hover:text-foreground text-xl"
-                  onClick={() => setActiveModal(null)}
+                  onClick={handleCloseModal}
                 >
                   <X className="w-5 h-5 cursor-pointer" />
                 </button>
               </div>
               {activeModal === "anon" && (
-                <div className="flex flex-col justify-center items-center h-full w-full space-y-5">
+                <div className="flex flex-col justify-start items-center w-full space-y-5 pb-4 mt-1">
                   <p className="text-sm text-foreground/70 text-center">
                     Verify your Aadhaar credentials without revealing your identity.
                   </p>
@@ -313,11 +387,11 @@ export default function Apply() {
                       onClick={async () => {
                         setZkPassLoading(true);
                         try {
-                          const result = await zkPassProofGen({ address: publicKey?.toBase58()!, program });
+                          const result = await useZkPassProofGen({ address: publicKey?.toBase58()!, program });
                           setZkPassResult(result);
                           if (result && result.success) {
-                            const attestation = await getZkPassAttestation({ 
-                              address: publicKey.toBase58(), 
+                            const attestation = await getZkPassAttestation({
+                              address: publicKey.toBase58(),
                               program,
                               issuerPubkey: zkPassIssuerPubkey
                             });
@@ -401,14 +475,14 @@ export default function Apply() {
                       onClick={async () => {
                         setReclaimLoading(true);
                         try {
-                          const result = await reclaimProofGenPlaid({ 
-                            address: publicKey?.toBase58()!, 
-                            program 
+                          const result = await useReclaimProofGenPlaid({
+                            address: publicKey?.toBase58()!,
+                            program
                           });
                           setReclaimResult(result);
                           if (result && result.success) {
-                            const attestation = await getReclaimAttestation({ 
-                              address: publicKey?.toBase58()!, 
+                            const attestation = await getReclaimAttestation({
+                              address: publicKey?.toBase58()!,
                               program,
                               issuerPubkey: plaidIssuerPubkey
                             });
@@ -470,7 +544,6 @@ export default function Apply() {
                           setReclaimResult(null);
                           if (reclaimResult?.success) {
                             setActiveModal(null);
-                            // Refresh the credit score after successful verification
                             if (publicKey) {
                               getCreditScore(publicKey.toBase58()).then(score => {
                                 if (score !== null) setCreditScore(score);

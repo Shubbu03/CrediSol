@@ -7,8 +7,8 @@ import secp256k1 from "secp256k1"
 import * as borsh from "borsh"
 import sha3 from 'js-sha3'
 
-import { zkPassIssuerPubkey } from "../constants/issuers";
-import { AttestationRegistry } from "../../program/types/attestation_registry";
+import { zkPassIssuerPubkey } from "../../lib/constants/issuers";
+import { AttestationRegistry } from "../../lib/program/types/attestation_registry";
 
 const APP_ID = process.env.NEXT_PUBLIC_ZKPASS_APP_ID;
 const SCHEMA_ID = process.env.NEXT_PUBLIC_ZKPASS_SCHEMA_ID;
@@ -29,7 +29,7 @@ function hexToBytes(hex: string): Uint8Array {
     return Uint8Array.from(Buffer.from(hex.replace(/^0x/, ""), "hex"));
 }
 
-export const zkPassProofGen = async ({ address, program }: {
+export const useZkPassProofGen = async ({ address, program }: {
     address: string;
     program: anchor.Program<AttestationRegistry>;
 }) => {
