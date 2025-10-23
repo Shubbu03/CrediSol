@@ -312,7 +312,6 @@ export default function Apply() {
           >
             <CreateLoanForm 
               isVerified={
-                anonAadhaarStatus === 'logged-in' && 
                 zkPassAttestation?.isValid && 
                 reclaimAttestation?.isValid
               }

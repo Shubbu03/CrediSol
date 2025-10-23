@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
+import { useCreateLoan } from "../../hooks/use-create-loan";
 import { motion } from "framer-motion";
 import { AlertCircle } from "lucide-react";
 import { useLoansMarketplaceProgram } from "../../hooks/use-get-program";
@@ -50,30 +51,53 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
     const totalRepayment = amount + estimatedInterest;
     const requiredCollateral = Math.round((amount * minCollateralBps) / 10000);
 
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
+
     const onSubmit = async (data: LoanFormValues) => {
         if (!publicKey) {
-            console.error('Wallet not connected');
+            setError('Please connect your wallet');
             return;
         }
 
         if (!isVerified) {
-            console.error('Verification required');
+            setError('Please complete verification first');
+            return;
+        }
+
+        if (!program) {
+            setError('Program not initialized');
             return;
         }
 
         setIsSubmitting(true);
+        setError(null);
+        setSuccess(false);
+
         try {
             console.log('Creating loan with data:', data);
 
-            await Promise.race([
-                new Promise((resolve) => setTimeout(resolve, 1500)),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timed out')), 10000)
-                )
-            ]);
+            const result = await useCreateLoan({
+                program,
+                address: publicKey.toString(),
+                amount: data.amount,
+                termMonths: data.termMonths,
+                maxAprBps: data.maxAprBps,
+                minCollateralBps: data.minCollateralBps,
+                fundingDeadlineDays: data.fundingDeadlineDays
+            });
 
-        } catch (error) {
+            if (result.success) {
+                console.log('Loan created successfully:', result);
+                setSuccess(true);
+                // Optionally reset form or redirect
+                // form.reset();
+            } else {
+                throw new Error(result.error || 'Failed to create loan');
+            }
+        } catch (error: any) {
             console.error('Error creating loan:', error);
+            setError(error.message || 'Failed to create loan');
         } finally {
             setIsSubmitting(false);
         }
@@ -120,6 +144,24 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
                             </p>
                         </motion.div>
 
+                        {error && (
+                            <motion.div
+                                variants={itemVariants}
+                                className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 flex items-center gap-2"
+                            >
+                                <AlertCircle className="w-5 h-5" />
+                                {error}
+                            </motion.div>
+                        )}
+                        {success && (
+                            <motion.div
+                                variants={itemVariants}
+                                className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-500 flex items-center gap-2"
+                            >
+                                <AlertCircle className="w-5 h-5" />
+                                Loan created successfully!
+                            </motion.div>
+                        )}
                         <motion.div variants={itemVariants}>
                             <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
                                 <div className="mb-6">
@@ -277,10 +319,10 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
                                             type="submit"
                                             disabled={isSubmitting || !isVerified}
                                             className={`w-full px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${isSubmitting
-                                                    ? 'bg-trust-green/50 cursor-not-allowed text-foreground/50'
-                                                    : !isVerified
-                                                        ? 'bg-surface-2 border border-border/30 cursor-not-allowed text-foreground/50'
-                                                        : 'bg-trust-green hover:bg-trust-green/90 text-white shadow-lg shadow-trust-green/20 hover:shadow-trust-green/30'
+                                                ? 'bg-trust-green/50 cursor-not-allowed text-foreground/50'
+                                                : !isVerified
+                                                    ? 'bg-surface-2 border border-border/30 cursor-not-allowed text-foreground/50'
+                                                    : 'bg-trust-green hover:bg-trust-green/90 text-white shadow-lg shadow-trust-green/20 hover:shadow-trust-green/30'
                                                 }`}
                                         >
                                             {!isVerified

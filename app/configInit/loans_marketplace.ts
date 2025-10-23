@@ -2,8 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Keypair, PublicKey, SystemProgram, Connection } from "@solana/web3.js";
 import idl from "./program/idl/loans_marketplace.json";
 import type { LoansMarketplace } from "./program/types/loans_marketplace";
-import { Program } from "@coral-xyz/anchor";
-import { type Idl } from "@coral-xyz/anchor";
+import { Program, type Idl } from "@coral-xyz/anchor";
 
 const RPC_ENDPOINT = process.env.RPC_URL || "https://api.devnet.solana.com";
 const FEE_BPS = 500; // 5% fee
@@ -20,10 +19,8 @@ function initializeProgram() {
         new anchor.Wallet(admin),
         { commitment: "confirmed" }
     );
-    return {
-        program: new Program<LoansMarketplace>(idl as Idl, provider),
-        admin,
-    };
+    const program = new Program<LoansMarketplace>(idl as Idl, provider);
+    return { program, admin };
 }
 
 function getConfigPda(program: Program<LoansMarketplace>) {
@@ -34,26 +31,44 @@ async function initializeConfig(usdcMint: PublicKey) {
     const { program, admin } = initializeProgram();
     const [configPda] = getConfigPda(program);
 
-    console.log('Config PDA:', configPda.toString());
-    console.log('Program ID:', program.programId.toString());
-    console.log('Admin:', admin.publicKey.toString());
-    console.log('USDC Mint:', usdcMint.toString());
+    console.log("─────────────────────────────────────────────");
+    console.log("Config PDA:", configPda.toString());
+    console.log("Program ID:", program.programId.toString());
+    console.log("Admin:", admin.publicKey.toString());
+    console.log("USDC Mint:", usdcMint.toString());
+    console.log("─────────────────────────────────────────────");
 
     try {
         const config = await program.account.config.fetchNullable(configPda);
-        if (config) return { configPda, isNew: false };
-    } catch { }
+        if (config) {
+            console.log("Config already exists on-chain.");
+            return { configPda, isNew: false };
+        }
+    } catch (e) {
+        console.log("No existing config found, creating new one...");
+    }
 
-    await program.methods
-        .initializeConfig(FEE_BPS)
-        .accounts({
-            admin: admin.publicKey,
-            usdcMint,
-        })
-        .signers([admin])
-        .rpc();
+    try {
+        const txSig = await program.methods
+            .initializeConfig(FEE_BPS)
+            .accountsStrict({
+                config: configPda,
+                admin: admin.publicKey,
+                usdcMint,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([admin])
+            .rpc();
 
-    return { configPda, isNew: true };
+        console.log("Config initialized successfully!");
+        console.log("Transaction signature:", txSig);
+        console.log("View on Explorer:", `https://explorer.solana.com/tx/${txSig}?cluster=devnet`);
+
+        return { configPda, isNew: true };
+    } catch (err) {
+        console.error("Error initializing config:", err);
+        throw err;
+    }
 }
 
 if (require.main === module) {
@@ -61,9 +76,15 @@ if (require.main === module) {
         try {
             const usdcMint = new PublicKey("Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr");
             const { configPda, isNew } = await initializeConfig(usdcMint);
+
+            console.log("\n─────────────────────────────────────────────");
+            console.log("Final Result:");
             console.log(JSON.stringify({ configPda: configPda.toString(), isNew }, null, 2));
+            console.log("─────────────────────────────────────────────\n");
+
             process.exit(0);
         } catch (error) {
+            console.error("Script failed:", error);
             process.exit(1);
         }
     })();

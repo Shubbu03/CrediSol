@@ -15,7 +15,7 @@ score_attestor = "4PqY9kbQzanngrw48sHdCiK44AdCmw2VrEx485JVf7Jo"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
