@@ -105,7 +105,6 @@ export function useLoansList() {
                             };
                         } catch (err) {
                             // Score attestation doesn't exist or failed to fetch
-                            console.log('No attested score found for loan:', loan.publicKey.toBase58());
                         }
                     }
 
@@ -142,7 +141,6 @@ export function useLoansList() {
                 }));
                 return applyFilters(mappedLoans, filters);
             } catch (error) {
-                console.error("Failed to fetch loans:", error);
                 return [];
             }
         },
@@ -190,7 +188,6 @@ export function useLoanDetail(loanId?: string) {
                     targetAmount: loan.amount.toNumber(),
                 } as LoanSummary;
             } catch (error) {
-                console.error("Failed to fetch loan detail:", error);
                 throw new Error("Loan not found");
             }
         },
@@ -224,10 +221,9 @@ export function usePortfolio() {
                     repaidPrincipal: share.account.repaidPrincipal.toNumber(),
                     repaidInterest: share.account.repaidInterest.toNumber(),
                     proRataBps: share.account.proRataBps,
-                    state: 0, // Will need to fetch loan state separately
+                    state: 0,
                 }));
             } catch (error) {
-                console.error("Failed to fetch portfolio:", error);
                 return [];
             }
         },
@@ -272,7 +268,6 @@ export function useCreditScore(borrower: string, loanId: string) {
                     recommendedMinCollateralBps: scoreAttestation.recommendedMinCollateralBps,
                 };
             } catch (error) {
-                console.error("Failed to fetch credit score:", error);
                 return null;
             }
         },
@@ -294,10 +289,10 @@ export function useLenderFund() {
             if (!program) throw new Error("Program not available");
 
             try {
-                notify("Processing funding transaction...", "info");
+                notify({ description: "Processing funding transaction...", type: "info" });
 
                 const loanPda = new PublicKey(loanId);
-                const loanSignerPda = useLoanSignerPda(publicKey, 0); // TODO: Extract loan ID from loanPda
+                const loanSignerPda = useLoanSignerPda(publicKey, 0);
                 const lenderSharePda = useLenderSharePda(loanPda, publicKey);
 
                 // Get USDC mint from config
@@ -322,10 +317,10 @@ export function useLenderFund() {
                     })
                     .rpc();
 
-                notify("Successfully funded loan!", "success");
+                notify({ description: "Successfully funded loan!", type: "success" });
                 return tx;
             } catch (error) {
-                notify(`Failed to fund loan: ${error}`, "error");
+                notify({ description: `Failed to fund loan: ${error}`, type: "error" });
                 throw error;
             }
         },
@@ -350,10 +345,10 @@ export function useFinalizeFunding() {
             if (!program) throw new Error("Program not available");
 
             try {
-                notify("Processing finalize funding transaction...", "info");
+                notify({ description: "Processing finalize funding transaction...", type: "info" });
 
                 const loanPda = new PublicKey(loanId);
-                const loanSignerPda = useLoanSignerPda(publicKey, 0); // TODO: Extract loan ID from loanPda
+                const loanSignerPda = useLoanSignerPda(publicKey, 0);
 
                 const tx = await program.methods
                     .finalizeFunding()
@@ -364,10 +359,10 @@ export function useFinalizeFunding() {
                     })
                     .rpc();
 
-                notify("Successfully finalized funding!", "success");
+                notify({ description: "Successfully finalized funding!", type: "success" });
                 return tx;
             } catch (error) {
-                notify(`Failed to finalize funding: ${error}`, "error");
+                notify({ description: `Failed to finalize funding: ${error}`, type: "error" });
                 throw error;
             }
         },
@@ -391,10 +386,10 @@ export function usePayoutToLenders() {
             if (!program) throw new Error("Program not available");
 
             try {
-                notify("Processing payout transaction...", "info");
+                notify({ description: "Processing payout transaction...", type: "info" });
 
                 const loanPda = new PublicKey(loanId);
-                const loanSignerPda = useLoanSignerPda(publicKey, 0); // TODO: Extract loan ID from loanPda
+                const loanSignerPda = useLoanSignerPda(publicKey, 0);
                 const lenderSharePda = useLenderSharePda(loanPda, publicKey);
 
                 // Get USDC mint from config
@@ -418,10 +413,10 @@ export function usePayoutToLenders() {
                     })
                     .rpc();
 
-                notify("Successfully processed payout!", "success");
+                notify({ description: "Successfully processed payout!", type: "success" });
                 return tx;
             } catch (error) {
-                notify(`Failed to process payout: ${error}`, "error");
+                notify({ description: `Failed to process payout: ${error}`, type: "error" });
                 throw error;
             }
         },

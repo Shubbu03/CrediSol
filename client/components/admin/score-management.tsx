@@ -19,16 +19,16 @@ export function AdminScoreManagement({ className = "" }: AdminScoreManagementPro
 
     const handleInitializeConfig = async () => {
         if (!publicKey) {
-            notify('Please connect your wallet', 'error');
+            notify({ description: 'Please connect your wallet', type: 'error' });
             return;
         }
 
         try {
             await initializeConfig(publicKey);
             setConfigInitialized(true);
-            notify('Score attestor config initialized successfully!', 'success');
+            notify({ description: 'Score attestor config initialized successfully!', type: 'success' });
         } catch (err) {
-            console.error('Failed to initialize config:', err);
+            // Error handling is done by the hook
         }
     };
 

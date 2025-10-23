@@ -497,7 +497,7 @@ export default function Apply() {
                       onClick={async () => {
                         setReclaimLoading(true);
                         try {
-                          const result = await reclaimProofGenPlaid({
+                          const result = await useReclaimProofGenPlaid({
                             address: publicKey?.toBase58()!,
                             program
                           });

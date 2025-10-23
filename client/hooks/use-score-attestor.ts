@@ -12,8 +12,6 @@ export function useScoreAttestor() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Initialize service with a default attestor key
-    // In production, this should be managed securely
     const service = new ScoreAttestorService();
 
     const postScoreAttestation = useCallback(async (
@@ -70,12 +68,12 @@ export function useScoreAttestor() {
                 .signers([service.getAttestorKeypair()])
                 .rpc();
 
-            notify('Score attestation posted successfully!', 'success');
+            notify({ description: 'Score attestation posted successfully!', type: 'success' });
             return { tx, scorePda, attestationData };
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : 'Unknown error';
             setError('An error occurred. Please try again later.');
-            notify('An error occurred. Please try again later.', 'error');
+            notify({ description: 'An error occurred. Please try again later.', type: 'error' });
             throw err;
         } finally {
             setIsLoading(false);
@@ -108,12 +106,12 @@ export function useScoreAttestor() {
                 })
                 .rpc();
 
-            notify('Score attestor config initialized!', 'success');
+            notify({ description: 'Score attestor config initialized!', type: 'success' });
             return { tx, configPda };
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : 'Unknown error';
             setError('An error occurred. Please try again later.');
-            notify('An error occurred. Please try again later.', 'error');
+            notify({ description: 'An error occurred. Please try again later.', type: 'error' });
             throw err;
         } finally {
             setIsLoading(false);
@@ -146,7 +144,6 @@ export function useScoreAttestor() {
                 revoked: scoreAttestation.revoked,
             };
         } catch (err) {
-            console.error('Failed to fetch score attestation:', err);
             return null;
         }
     }, [program]);

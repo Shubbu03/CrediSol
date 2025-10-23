@@ -36,7 +36,6 @@ export function ScoreAttestationCard({ onAttestationComplete, loanId }: ScoreAtt
                 onAttestationComplete(result.attestationData);
             }
         } catch (err) {
-            console.error('Score attestation failed:', err);
             setAttestationStatus('error');
         }
     };
