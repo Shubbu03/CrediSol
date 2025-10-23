@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN } from "@coral-xyz/anchor";
 import { LoansMarketplace } from "../lib/program/types/loans_marketplace";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Keypair } from "@solana/web3.js";
 import { notify } from "../lib/notify";
 
 interface CreateLoanParams {
@@ -30,8 +30,8 @@ export const createLoanTransaction = async ({
     maxAprBps,
     minCollateralBps,
     fundingDeadlineDays,
-    loanId = new BN(Date.now())
-}: Omit<CreateLoanParams, 'address'> & { address?: string; loanId?: BN }): Promise<CreateLoanResult> => {
+    loanId
+}: Omit<CreateLoanParams, "address"> & { address?: string; loanId?: BN }): Promise<CreateLoanResult> => {
     try {
         if (!program.provider) throw new Error("Provider not initialized");
 
@@ -52,14 +52,16 @@ export const createLoanTransaction = async ({
         const now = Math.floor(Date.now() / 1000);
         const loanFundingDeadline = new BN(now + fundingDeadlineDays * 24 * 60 * 60);
 
+        const finalLoanId = loanId ?? new BN(Keypair.generate().publicKey.toBytes().slice(0, 8));
+
         const [loanPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("loan"), loanId.toArrayLike(Buffer, "le", 8)],
+            [Buffer.from("loan"), finalLoanId.toArrayLike(Buffer, "le", 8)],
             program.programId
         );
 
         const tx = await program.methods
             .createLoanRequest(
-                loanId,
+                finalLoanId,
                 loanAmount,
                 loanTermSeconds,
                 maxAprBps,
@@ -69,22 +71,20 @@ export const createLoanTransaction = async ({
             .accounts({
                 borrower,
                 config: configPda,
-                usdcMint
+                usdcMint,
             })
             .transaction();
-
-        tx.feePayer = program.provider.publicKey;
 
         return {
             success: true,
             transaction: tx,
-            loanPda: loanPda.toString()
+            loanPda: loanPda.toString(),
         };
     } catch (error: any) {
         console.error("Error creating loan transaction:", error);
         return {
             success: false,
-            error: error.message || "Failed to create loan transaction"
+            error: error.message || "Failed to create loan transaction",
         };
     }
 };
@@ -92,45 +92,56 @@ export const createLoanTransaction = async ({
 export const useCreateLoan = () => {
     const createLoan = async (params: CreateLoanParams): Promise<CreateLoanResult> => {
         try {
-            const {
-                success,
-                transaction,
-                loanPda,
-                error
-            } = await createLoanTransaction(params);
+            const { success, transaction, loanPda, error } = await createLoanTransaction(params);
+            if (!success || !transaction) throw new Error(error || "Failed to create transaction");
 
-            if (!success || !transaction) {
-                throw new Error(error || "Failed to create transaction");
-            }
+            const provider = params.program.provider as anchor.AnchorProvider;
+            const connection = provider.connection;
 
-            if (!params.program.provider.wallet) {
-                throw new Error("Wallet not connected");
-            }
+            if (!provider.wallet?.publicKey) throw new Error("Wallet not connected");
 
-            const latest = await params.program.provider.connection.getLatestBlockhash("confirmed");
-            transaction.recentBlockhash = latest.blockhash;
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("finalized");
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = provider.wallet.publicKey;
 
-            const signedTx = await params.program.provider.wallet.signTransaction(transaction);
+            const signedTx = await provider.wallet.signTransaction(transaction);
 
-            const signature = await params.program.provider.connection.sendRawTransaction(
-                signedTx.serialize(),
-                {
+            const rawTx = signedTx.serialize();
+            let signature: string;
+
+            try {
+                signature = await connection.sendRawTransaction(rawTx, {
                     skipPreflight: false,
-                    preflightCommitment: "confirmed"
+                    preflightCommitment: "confirmed",
+                });
+            } catch (err: any) {
+                if (err.getLogs) {
+                    const logs = await err.getLogs(connection);
+                    console.error("Transaction logs:", logs);
                 }
-            );
+
+                if (err.message?.includes("already been processed")) {
+                    notify({
+                        type: "info",
+                        title: "Transaction Already Processed",
+                        description: "Your loan request was already submitted successfully.",
+                    });
+                    return { success: true, loanPda };
+                }
+
+                throw err;
+            }
 
             console.log("Sent tx:", signature);
 
-            await params.program.provider.connection.confirmTransaction({
-                signature,
-                blockhash: latest.blockhash,
-                lastValidBlockHeight: latest.lastValidBlockHeight,
-            }, "confirmed");
+            await connection.confirmTransaction(
+                { signature, blockhash, lastValidBlockHeight },
+                "confirmed"
+            );
 
             const listener = params.program.addEventListener(
                 "loanCreated",
-                (event: any, _slot: number) => {
+                (event: any) => {
                     if (event.loan && loanPda && event.loan.toString() === loanPda) {
                         console.log("LoanCreated event:", event);
                     }
@@ -148,27 +159,20 @@ export const useCreateLoan = () => {
             notify({
                 type: "success",
                 title: "Loan Created",
-                description: `Your loan request has been submitted successfully!`
+                description: "Your loan request has been submitted successfully!",
             });
 
-            return {
-                success: true,
-                signature,
-                loanPda
-            };
+            return { success: true, signature, loanPda };
         } catch (error: any) {
             console.error("Error in createLoan:", error);
 
             notify({
                 type: "error",
                 title: "Error",
-                description: error.message || "Failed to create loan"
+                description: error.message || "Failed to create loan",
             });
 
-            return {
-                success: false,
-                error: error.message || "Failed to create loan"
-            };
+            return { success: false, error: error.message || "Failed to create loan" };
         }
     };
 
