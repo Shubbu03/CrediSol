@@ -7,7 +7,7 @@ import loansMarketplaceIdl from './idl/loans_marketplace.json';
 import scoreAttestorIdl from './idl/score_attestor.json';
 import { useAnchorProvider } from './provider';
 
-const LOANS_PROGRAM_ID = new PublicKey("BTH9yYvKRBZHXJAPuv724mCMiDcjcnCqef7rDdSZUJWf");
+const LOANS_PROGRAM_ID = new PublicKey("5CsJHgdh6jtKRVJiJL4bBpTeUcUFV3B9gphEccyvGQmS");
 const SCORE_ATTESTOR_PROGRAM_ID = new PublicKey("4PqY9kbQzanngrw48sHdCiK44AdCmw2VrEx485JVf7Jo");
 const PROGRAM_ID = LOANS_PROGRAM_ID;
 
