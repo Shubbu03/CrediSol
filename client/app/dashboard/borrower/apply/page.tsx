@@ -14,9 +14,9 @@ import {
 import { useProver } from "@anon-aadhaar/react";
 import { useUserRole } from "../../../../stores/user-store";
 import { getCreditScore } from "../../../actions/getCreditScore";
-import { zkPassProofGen, getAttestation as getZkPassAttestation } from "../../../../lib/getProofs/zkPass";
-import { getProgram } from "../../../../lib/getProgram/attestationRegistry";
-import { reclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../lib/getProofs/reclaim";
+import { useZkPassProofGen, getAttestation as getZkPassAttestation } from "../../../../hooks/use-proof/zkPass";
+import { useAttesttationRegistryProgram as getProgram } from "../../../../hooks/use-get-program";
+import { useReclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../hooks/use-proof/reclaim";
 import { zkPassIssuerPubkey, plaidIssuerPubkey } from "../../../../lib/constants/issuers";
 import { CreateLoanForm } from "../../../../components/borrower/CreateLoanForm";
 
@@ -388,7 +388,7 @@ export default function Apply() {
                       onClick={async () => {
                         setZkPassLoading(true);
                         try {
-                          const result = await zkPassProofGen({ address: publicKey?.toBase58()!, program });
+                          const result = await useZkPassProofGen({ address: publicKey?.toBase58()!, program });
                           setZkPassResult(result);
                           if (result && result.success) {
                             const attestation = await getZkPassAttestation({
@@ -476,7 +476,7 @@ export default function Apply() {
                       onClick={async () => {
                         setReclaimLoading(true);
                         try {
-                          const result = await reclaimProofGenPlaid({
+                          const result = await useReclaimProofGenPlaid({
                             address: publicKey?.toBase58()!,
                             program
                           });

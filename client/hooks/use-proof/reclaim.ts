@@ -8,8 +8,8 @@ import sha3 from 'js-sha3'
 import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk';
 import { BN } from '@coral-xyz/anchor';
 
-import { plaidIssuerPubkey } from "../constants/issuers";
-import { AttestationRegistry } from "../../program/types/attestation_registry";
+import { plaidIssuerPubkey } from "../../lib/constants/issuers";
+import { AttestationRegistry } from "../../lib/program/types/attestation_registry";
 
 const APP_ID = process.env.NEXT_PUBLIC_RECLAIM_APP_ID;
 const APP_SECRET = process.env.NEXT_PUBLIC_RECLAIM_APP_SECRET;
@@ -244,7 +244,7 @@ export const getAttestation = async ({
     }
 };
 
-export const reclaimProofGenPlaid = async ({
+export const useReclaimProofGenPlaid = async ({
     address,
     program,
 }: {

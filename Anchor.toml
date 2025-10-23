@@ -7,7 +7,7 @@ skip-lint = false
 
 [programs.localnet]
 attestation_registry = "86MykibNZvSLLZWj5jDg7gXViaqMANMeuUauP32xn8sq"
-loans_marketplace = "BTH9yYvKRBZHXJAPuv724mCMiDcjcnCqef7rDdSZUJWf"
+loans_marketplace = "5CsJHgdh6jtKRVJiJL4bBpTeUcUFV3B9gphEccyvGQmS"
 reputation = "6uLcVgj2viBHA5niMsXvKHuxMVvTRFjvgRrD933L8pk3"
 score_attestor = "4PqY9kbQzanngrw48sHdCiK44AdCmw2VrEx485JVf7Jo"
 

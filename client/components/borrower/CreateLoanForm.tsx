@@ -5,6 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle } from "lucide-react";
+import { useLoansMarketplaceProgram } from "../../hooks/use-get-program";
 
 const loanFormSchema = z.object({
     amount: z.number().min(100, "Minimum loan amount is 100 USDC"),
@@ -24,6 +25,7 @@ interface CreateLoanFormProps {
 export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps) {
     const { publicKey } = useWallet();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const program = useLoansMarketplaceProgram();
 
     const form = useForm<LoanFormValues>({
         resolver: zodResolver(loanFormSchema),
