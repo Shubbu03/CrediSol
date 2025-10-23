@@ -2,6 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { BN } from "@coral-xyz/anchor";
 import { LoansMarketplace } from "../lib/program/types/loans_marketplace";
 import { PublicKey } from "@solana/web3.js";
+import { notify } from "../lib/notify";
 
 interface CreateLoanParams {
     address: string;
@@ -13,6 +14,14 @@ interface CreateLoanParams {
     fundingDeadlineDays: number;
 }
 
+interface CreateLoanResult {
+    success: boolean;
+    transaction?: anchor.web3.Transaction;
+    loanPda?: string;
+    error?: string;
+    signature?: string;
+}
+
 export const createLoanTransaction = async ({
     program,
     address,
@@ -22,7 +31,7 @@ export const createLoanTransaction = async ({
     minCollateralBps,
     fundingDeadlineDays,
     loanId = new BN(Date.now())
-}: Omit<CreateLoanParams, 'address'> & { address?: string; loanId?: BN }) => {
+}: Omit<CreateLoanParams, 'address'> & { address?: string; loanId?: BN }): Promise<CreateLoanResult> => {
     try {
         if (!program.provider) throw new Error("Provider not initialized");
 
@@ -66,72 +75,102 @@ export const createLoanTransaction = async ({
 
         tx.feePayer = program.provider.publicKey;
 
-        return { success: true, transaction: tx, loanPda: loanPda.toString() };
+        return {
+            success: true,
+            transaction: tx,
+            loanPda: loanPda.toString()
+        };
     } catch (error: any) {
         console.error("Error creating loan transaction:", error);
-        return { success: false, error: error.message || "Failed to create loan transaction" };
+        return {
+            success: false,
+            error: error.message || "Failed to create loan transaction"
+        };
     }
 };
 
-export const useCreateLoan = async ({
-    address,
-    program,
-    amount,
-    termMonths,
-    maxAprBps,
-    minCollateralBps,
-    fundingDeadlineDays,
-}: CreateLoanParams) => {
-    try {
-        const { success, transaction, loanPda, error } = await createLoanTransaction({
-            program,
-            address,
-            amount,
-            termMonths,
-            maxAprBps,
-            minCollateralBps,
-            fundingDeadlineDays
-        });
+export const useCreateLoan = () => {
+    const createLoan = async (params: CreateLoanParams): Promise<CreateLoanResult> => {
+        try {
+            const {
+                success,
+                transaction,
+                loanPda,
+                error
+            } = await createLoanTransaction(params);
 
-        if (!success || !transaction) {
-            throw new Error(error || "Failed to create transaction");
-        }
-
-        if (!program.provider.wallet) {
-            throw new Error("Wallet not connected");
-        }
-
-        const latest = await program.provider.connection.getLatestBlockhash("confirmed");
-        transaction.recentBlockhash = latest.blockhash;
-
-        const signedTx = await program.provider.wallet.signTransaction(transaction);
-
-        const signature = await program.provider.connection.sendRawTransaction(
-            signedTx.serialize(),
-            { skipPreflight: false, preflightCommitment: "confirmed" }
-        );
-
-        console.log("Sent tx:", signature);
-
-        await program.provider.connection.confirmTransaction({
-            signature,
-            blockhash: latest.blockhash,
-            lastValidBlockHeight: latest.lastValidBlockHeight,
-        }, "confirmed");
-
-        const listener = program.addEventListener("loanCreated", (event, slot) => {
-            if (event.loan.toString() === loanPda) {
-                console.log("LoanCreated event:", event);
+            if (!success || !transaction) {
+                throw new Error(error || "Failed to create transaction");
             }
-        });
 
-        setTimeout(() => {
-            program.removeEventListener(listener);
-        }, 30000);
+            if (!params.program.provider.wallet) {
+                throw new Error("Wallet not connected");
+            }
 
-        return { success: true, signature, loanPda };
-    } catch (error: any) {
-        console.error("Error creating loan:", error);
-        return { success: false, error: error.message || "Failed to create loan" };
-    }
+            const latest = await params.program.provider.connection.getLatestBlockhash("confirmed");
+            transaction.recentBlockhash = latest.blockhash;
+
+            const signedTx = await params.program.provider.wallet.signTransaction(transaction);
+
+            const signature = await params.program.provider.connection.sendRawTransaction(
+                signedTx.serialize(),
+                {
+                    skipPreflight: false,
+                    preflightCommitment: "confirmed"
+                }
+            );
+
+            console.log("Sent tx:", signature);
+
+            await params.program.provider.connection.confirmTransaction({
+                signature,
+                blockhash: latest.blockhash,
+                lastValidBlockHeight: latest.lastValidBlockHeight,
+            }, "confirmed");
+
+            const listener = params.program.addEventListener(
+                "loanCreated",
+                (event: any, _slot: number) => {
+                    if (event.loan && loanPda && event.loan.toString() === loanPda) {
+                        console.log("LoanCreated event:", event);
+                    }
+                }
+            );
+
+            setTimeout(() => {
+                try {
+                    params.program.removeEventListener(listener);
+                } catch (e) {
+                    console.warn("Failed to remove event listener:", e);
+                }
+            }, 30000);
+
+            notify({
+                type: "success",
+                title: "Loan Created",
+                description: `Your loan request has been submitted successfully!`
+            });
+
+            return {
+                success: true,
+                signature,
+                loanPda
+            };
+        } catch (error: any) {
+            console.error("Error in createLoan:", error);
+
+            notify({
+                type: "error",
+                title: "Error",
+                description: error.message || "Failed to create loan"
+            });
+
+            return {
+                success: false,
+                error: error.message || "Failed to create loan"
+            };
+        }
+    };
+
+    return { createLoan };
 };

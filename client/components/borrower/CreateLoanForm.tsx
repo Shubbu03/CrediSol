@@ -27,6 +27,7 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
     const { publicKey } = useWallet();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const program = useLoansMarketplaceProgram();
+    const { createLoan } = useCreateLoan();
 
     const form = useForm<LoanFormValues>({
         resolver: zodResolver(loanFormSchema),
@@ -77,7 +78,11 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
         try {
             console.log('Creating loan with data:', data);
 
-            const result = await useCreateLoan({
+            if (!publicKey) {
+                throw new Error('Wallet not connected');
+            }
+
+            const result = await createLoan({
                 program,
                 address: publicKey.toString(),
                 amount: data.amount,
