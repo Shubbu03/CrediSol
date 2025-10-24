@@ -5,11 +5,11 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
+[programs.devnet]
 attestation_registry = "86MykibNZvSLLZWj5jDg7gXViaqMANMeuUauP32xn8sq"
 loans_marketplace = "5CsJHgdh6jtKRVJiJL4bBpTeUcUFV3B9gphEccyvGQmS"
 reputation = "6uLcVgj2viBHA5niMsXvKHuxMVvTRFjvgRrD933L8pk3"
-score_attestor = "4PqY9kbQzanngrw48sHdCiK44AdCmw2VrEx485JVf7Jo"
+score_attestor = "5xsKPzfNAZz7bxpPLFLhWwb7QaZ9ueNuos6Hr3WMh8S5"
 
 [registry]
 url = "https://api.apr.dev"

@@ -1,13 +1,16 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { useCreateLoan } from "../../hooks/use-create-loan";
 import { motion } from "framer-motion";
 import { AlertCircle } from "lucide-react";
-import { useLoansMarketplaceProgram } from "../../hooks/use-get-program";
+import { useLoansMarketplaceProgram, useScoreAttestorProgram } from "../../hooks/use-get-program";
 import { notify } from "../../lib/notify";
+import { usePostScoreAttestation } from "../../hooks/use-post-score-attestation";
+import { PublicKey } from "@solana/web3.js";
+
 
 const loanFormSchema = z.object({
     amount: z.coerce
@@ -39,15 +42,24 @@ const loanFormSchema = z.object({
 
 type LoanFormValues = z.infer<typeof loanFormSchema>;
 
-interface CreateLoanFormProps {
-    isVerified: boolean;
-    creditScore: number;
+export interface CreditData {
+    score: number;
+    grade: number;
+    pdBps: number;
 }
 
-export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps) {
-    const { publicKey } = useWallet();
+interface CreateLoanFormProps {
+    isVerified: boolean;
+    creditData: CreditData;
+}
+
+export function CreateLoanForm({ isVerified, creditData }: CreateLoanFormProps) {
+    const { publicKey, wallet } = useWallet();
+    const { connection } = useConnection();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const program = useLoansMarketplaceProgram();
+    const loansMarketplaceProgram = useLoansMarketplaceProgram();
+    const scoreAttestorProgram = useScoreAttestorProgram();
+    const { postScoreAttestation } = usePostScoreAttestation();
     const { createLoan } = useCreateLoan();
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
@@ -95,8 +107,8 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
             setError("Please complete verification first");
             return;
         }
-        if (!program) {
-            setError("Program not initialized");
+        if (!loansMarketplaceProgram || !scoreAttestorProgram) {
+            setError("Programs not initialized");
             return;
         }
 
@@ -106,7 +118,7 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
 
         try {
             const result = await createLoan({
-                program,
+                program: loansMarketplaceProgram,
                 address: publicKey.toString(),
                 amount: data.amount,
                 termMonths: data.termMonths,
@@ -114,10 +126,34 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
                 minCollateralBps: data.minCollateralBps,
                 fundingDeadlineDays: data.fundingDeadlineDays,
             });
+            
+            const { success, loanPda, error } = result;
 
-            if (result.success) {
+            if (success && loanPda && wallet?.adapter.publicKey) {
+                try {
+                    const { score, grade, pdBps } = creditData;
+                    
+                    const scoreResult = await postScoreAttestation({
+                        program: scoreAttestorProgram,
+                        subject: wallet.adapter.publicKey,
+                        loan: new PublicKey(loanPda),
+                        score,
+                        grade,
+                        pdBps,
+                        expiryTs: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days from now
+                    });
+
+                    if (!scoreResult.success) {
+                        console.warn("Failed to post score attestation:", scoreResult.error);
+                    }
+                } catch (error) {
+                    console.error("Error posting score attestation:", error);
+                }
+            }
+
+            if (success) {
                 setSuccess(true);
-            } else if (result.error?.includes("already been processed")) {
+            } else if (error?.includes("already been processed")) {
                 setSuccess(true);
                 notify({
                     type: "info",
@@ -125,7 +161,7 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
                     description: "Your loan request was already submitted successfully.",
                 });
             } else {
-                throw new Error(result.error || "Failed to create loan");
+                throw new Error(error || "Failed to create loan");
             }
         } catch (err: any) {
             setError(err.message || "Failed to create loan");
@@ -205,12 +241,12 @@ export function CreateLoanForm({ isVerified, creditScore }: CreateLoanFormProps)
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-trust-green">
-                                                    Your Credit Score: {creditScore}
+                                                    Your Credit Score: {creditData.score}
                                                 </h3>
                                                 <p className="text-sm text-foreground/70 mt-1">
-                                                    {creditScore > 700
+                                                    {creditData.score > 700
                                                         ? "Excellent"
-                                                        : creditScore > 600
+                                                        : creditData.score > 600
                                                             ? "Good"
                                                             : "Fair"}{" "}
                                                     credit rating

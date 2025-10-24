@@ -11,7 +11,7 @@ pub use event::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("4PqY9kbQzanngrw48sHdCiK44AdCmw2VrEx485JVf7Jo");
+declare_id!("5xsKPzfNAZz7bxpPLFLhWwb7QaZ9ueNuos6Hr3WMh8S5");
 
 #[program]
 pub mod score_attestor {
@@ -20,11 +20,10 @@ pub mod score_attestor {
     pub fn initialize_config(
         ctx: Context<InitializeConfig>,
         attestor: Pubkey,
-        secp256k1_pubkey: [u8; 65]
+        secp256k1_pubkey: [u8; 65],
     ) -> Result<()> {
         let bump = ctx.bumps.config;
-        ctx.accounts
-            .init_config(bump, attestor, secp256k1_pubkey)
+        ctx.accounts.init_config(bump, attestor, secp256k1_pubkey)
     }
 
     pub fn set_admin(ctx: Context<AdminOnly>, new_admin: Pubkey) -> Result<()> {
@@ -34,6 +33,14 @@ pub mod score_attestor {
     pub fn set_paused(ctx: Context<AdminOnly>, paused: bool) -> Result<()> {
         ctx.accounts.set_paused(paused)
     }
+    pub fn set_issuer(ctx: Context<AdminOnly>, issuer: Pubkey) -> Result<()> {
+        ctx.accounts.set_issuer(issuer)
+    }
+
+    pub fn set_secp256k1_pubkey(ctx: Context<AdminOnly>, secp256k1_pubkey: [u8; 65]) -> Result<()> {
+        ctx.accounts.set_secp256k1_pubkey(secp256k1_pubkey)
+    }
+
     pub fn revoke_attestation(ctx: Context<AdminAndScore>) -> Result<()> {
         ctx.accounts.revoke_attestation()
     }
@@ -54,10 +61,10 @@ pub mod score_attestor {
         expiry_ts: i64,
         message: [u8; 32],
         signature: [u8; 64],
-        recover_id: u8
+        recover_id: u8,
     ) -> Result<()> {
         let bump = ctx.bumps.score;
-    
+
         ctx.accounts.post_score_attestation(
             bump,
             score,
@@ -67,7 +74,7 @@ pub mod score_attestor {
             expiry_ts,
             message,
             signature,
-            recover_id
+            recover_id,
         )
     }
 }

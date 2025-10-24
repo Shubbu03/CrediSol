@@ -18,7 +18,7 @@ import { useZkPassProofGen, getAttestation as getZkPassAttestation } from "../..
 import { useAttesttationRegistryProgram as getProgram } from "../../../../hooks/use-get-program";
 import { useReclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../hooks/use-proof/reclaim";
 import { zkPassIssuerPubkey, plaidIssuerPubkey } from "../../../../lib/constants/issuers";
-import { CreateLoanForm } from "../../../../components/borrower/CreateLoanForm";
+import { CreateLoanForm, CreditData } from "../../../../components/borrower/CreateLoanForm";
 
 export default function Apply() {
   const { role, isLoading } = useUserRole();
@@ -27,7 +27,7 @@ export default function Apply() {
   const router = useRouter();
   const program = getProgram();
 
-  const [creditScore, setCreditScore] = useState<string | number>('--');
+  const [creditData, setCreditData] = useState<CreditData | null>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [zkPassAttestation, setZkPassAttestation] = useState<any>(null);
   const [reclaimAttestation, setReclaimAttestation] = useState<any>(null);
@@ -83,8 +83,8 @@ export default function Apply() {
 
     (async () => {
       setProofsLoading(true);
-      const score = await getCreditScore(publicKey.toBase58());
-      if (score !== null) setCreditScore(score);
+      const creditData = await getCreditScore(publicKey.toBase58());
+      if (creditData !== null) setCreditData(creditData);
 
       const [zkPassAttestation, reclaimAttestation] = await Promise.all([
         getZkPassAttestation({ address: publicKey.toBase58(), program: program! }),
@@ -150,6 +150,16 @@ export default function Apply() {
     }
   };
 
+  if (!creditData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-foreground/70">
+          Please connect your wallet to access this page.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b border-border bg-background/80 backdrop-blur-sm">
@@ -166,7 +176,7 @@ export default function Apply() {
             <div className="flex items-center gap-4">
               <div className="px-3 py-1 bg-neutral-800 text-white text-sm font-medium rounded-full shadow">
                 Credit Score:{" "}
-                <span className="font-bold ml-1">{creditScore}</span>
+                <span className="font-bold ml-1">{creditData?.score}</span>
               </div>
             </div>
           </div>
@@ -303,19 +313,19 @@ export default function Apply() {
 
           <div className="text-center pt-4 text-sm text-foreground/70 mb-8">
             Your current credit score:{" "}
-            <span className="font-semibold text-foreground">{creditScore}</span>
+            <span className="font-semibold text-foreground">{creditData?.score}</span>
           </div>
 
           <motion.div
             variants={itemVariants}
             className="w-full p-6 rounded-xl border border-border/30 bg-background/80 backdrop-blur-md"
           >
-            <CreateLoanForm 
+            <CreateLoanForm
               isVerified={
-                zkPassAttestation?.isValid && 
+                zkPassAttestation?.isValid &&
                 reclaimAttestation?.isValid
               }
-              creditScore={typeof creditScore === 'number' ? creditScore : 0}
+              creditData={creditData}
             />
           </motion.div>
         </motion.div>
@@ -545,8 +555,8 @@ export default function Apply() {
                           if (reclaimResult?.success) {
                             setActiveModal(null);
                             if (publicKey) {
-                              getCreditScore(publicKey.toBase58()).then(score => {
-                                if (score !== null) setCreditScore(score);
+                              getCreditScore(publicKey.toBase58()).then(data => {
+                                if (data !== null) setCreditData(data);
                               });
                             }
                           }
@@ -558,7 +568,7 @@ export default function Apply() {
                   )}
 
                   <div className="mt-4 text-sm text-foreground/70 text-center">
-                    Current Credit Score: <span className="font-semibold text-foreground">{creditScore}</span>
+                    Current Credit Score: <span className="font-semibold text-foreground">{creditData?.score}</span>
                   </div>
                 </div>
               )}

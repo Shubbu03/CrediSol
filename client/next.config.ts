@@ -1,11 +1,17 @@
-import type { NextConfig } from "next";
-import path from "path";
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  turbopack: {
-    root: path.resolve(__dirname),
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack: (config: any, { isServer }: any) => {
+    if (!isServer) {
+      config.plugins.push(
+        new NodePolyfillPlugin({
+          excludeAliases: ['console'] // Optional: exclude any polyfills you don't need
+        })
+      );
+    }
+    return config;
   }
 };
 
-export default nextConfig;
+module.exports = nextConfig;

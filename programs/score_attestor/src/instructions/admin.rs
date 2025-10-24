@@ -36,4 +36,10 @@ impl<'info> AdminOnly<'info> {
         self.config.attestor = issuer;
         Ok(())
     }
+
+    pub fn set_secp256k1_pubkey(&mut self, secp256k1_pubkey: [u8; 65]) -> Result<()> {
+        require!(!self.config.paused, ScoreAttestorError::Paused);
+        self.config.secp256k1_pubkey = secp256k1_pubkey;
+        Ok(())
+    }
 }

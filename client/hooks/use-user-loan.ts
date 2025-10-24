@@ -27,18 +27,20 @@ export function useUserLoans(
                 const borrower = new PublicKey(borrowerAddress);
 
                 const allLoans = await program.account.loanAccount.all([{
-                        memcmp: {
-                            offset: 8 + 1, // discriminator + bump
-                            bytes: borrower.toBase58(),
-                        },
+                    memcmp: {
+                        offset: 8 + 1,
+                        bytes: borrower.toBase58(),
                     },
+                },
                 ]);
 
-                const sorted = allLoans.sort(
-                    (a, b) =>
-                        Number(b.account.loanId?.toString() || 0) -
-                        Number(a.account.loanId?.toString() || 0)
-                );
+                // const sorted = allLoans.sort(
+                //     (a, b) =>
+                //         Number(b.account.loanId?.toString() || 0) -
+                //         Number(a.account.loanId?.toString() || 0)
+                // );
+
+                const sorted = allLoans.sort().reverse();
 
                 setLoans(
                     sorted.map((loan) => ({

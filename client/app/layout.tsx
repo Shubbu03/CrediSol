@@ -8,7 +8,6 @@ import { QueryProvider } from "../components/providers/query-provider";
 import Provider from "./provider";
 import { Toaster } from "react-hot-toast";
 
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
