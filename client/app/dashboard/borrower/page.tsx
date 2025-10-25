@@ -14,11 +14,8 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { Connection } from "@solana/web3.js";
-import idl from "../../../lib/program/idl/loans_marketplace.json";
-import type { LoansMarketplace } from "../../../lib/program/types/loans_marketplace";
 import { useUserLoans } from "../../../hooks/use-user-loan";
+import { useLoansMarketplaceProgram } from "../../../hooks/use-get-program";
 
 const WalletMultiButton = dynamic(
     () =>
@@ -27,8 +24,6 @@ const WalletMultiButton = dynamic(
         ),
     { ssr: false }
 );
-
-const RPC_URL = "https://api.devnet.solana.com";
 
 export default function BorrowerDashboard() {
     const { role, isLoading, resetOnboarding } = useUserRole();
@@ -41,17 +36,10 @@ export default function BorrowerDashboard() {
         }
     }, [isLoading, role, router]);
 
-    const connection = useMemo(() => new Connection(RPC_URL, "confirmed"), []);
-    const program = useMemo(() => {
-        if (!wallet) return null;
-        const provider = new AnchorProvider(connection, wallet as any, {
-            commitment: "confirmed",
-        });
-        return new Program<LoansMarketplace>(idl as any, provider);
-    }, [wallet, connection]);
+    const program = useLoansMarketplaceProgram();
 
     const { loans, loading: loansLoading } = useUserLoans(
-        program,
+        program as any,
         publicKey?.toString()
     );
 
@@ -251,14 +239,18 @@ export default function BorrowerDashboard() {
                                                     </div>
                                                     <div
                                                         className={`text-sm px-2 py-1 rounded-full ${loan.account
-                                                            .isFunded
+                                                            .state === 2  // 2 = Funded state
                                                             ? "bg-green-500/10 text-green-500"
-                                                            : "bg-yellow-500/10 text-yellow-500"
+                                                            : loan.account.state === 1  // 1 = Funding state
+                                                                ? "bg-blue-500/10 text-blue-500"
+                                                                : "bg-yellow-500/10 text-yellow-500"
                                                             }`}
                                                     >
-                                                        {loan.account.isFunded
+                                                        {loan.account.state === 2
                                                             ? "Funded"
-                                                            : "Pending"}
+                                                            : loan.account.state === 1
+                                                                ? "Funding"
+                                                                : "Pending"}
                                                     </div>
                                                 </div>
                                                 <div className="text-sm text-foreground/70">

@@ -45,13 +45,19 @@ export function useConfigPda() {
 }
 
 // Utility function to convert loan ID to little-endian bytes (like Rust's to_le_bytes())
-function loanIdToLeBytes(loanId: number): Buffer {
+function loanIdToLeBytes(loanId: string | number): Buffer {
     const buffer = Buffer.allocUnsafe(8);
-    buffer.writeBigUInt64LE(BigInt(loanId), 0);
+    const value = BigInt(loanId);
+
+    // Write 64-bit little-endian integer manually
+    for (let i = 0; i < 8; i++) {
+        buffer[i] = Number((value >> BigInt(i * 8)) & BigInt(0xFF));
+    }
+
     return buffer;
 }
 
-export function useLoanPda(borrower: PublicKey, loanId: number) {
+export function useLoanPda(borrower: PublicKey, loanId: string | number) {
     return PublicKey.findProgramAddressSync(
         [
             Buffer.from("loan"),
@@ -62,7 +68,7 @@ export function useLoanPda(borrower: PublicKey, loanId: number) {
     )[0];
 }
 
-export function useLoanSignerPda(borrower: PublicKey, loanId: number) {
+export function useLoanSignerPda(borrower: PublicKey, loanId: string | number) {
     // Loan signer PDA is the same as loan PDA - it's the authority for the escrow ATA
     return useLoanPda(borrower, loanId);
 }

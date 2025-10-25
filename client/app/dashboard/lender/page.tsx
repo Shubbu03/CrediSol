@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { TrendingUp, DollarSign, PieChart, Zap } from "lucide-react";
 import Link from "next/link";
-import { useLoansList } from "../../../hooks/use-loans";
+import { useRecentLoansList } from "../../../hooks/use-loans";
 import { LoanCard } from "../../../components/lender/loan-card";
 import { LoanFilters } from "../../../components/lender/filters";
 import { LoansLoader, NoLoansEmptyState } from "../../../components/shared/loader";
@@ -32,7 +32,7 @@ export default function LenderDashboard() {
     };
 
     function LendingGrid() {
-        const { data, isLoading } = useLoansList();
+        const { data, isLoading } = useRecentLoansList();
 
         return (
             <div className="p-6 bg-surface-1 rounded-xl border border-border/30">

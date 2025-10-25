@@ -160,7 +160,7 @@ export const useCreateLoan = () => {
                 throw err;
             }
 
-            console.log("Sent tx:", signature);
+            // Transaction sent successfully
 
             await connection.confirmTransaction(
                 { signature, blockhash, lastValidBlockHeight },
@@ -171,7 +171,7 @@ export const useCreateLoan = () => {
                 "loanCreated",
                 (event: any) => {
                     if (event.loan && loanPda && event.loan.toString() === loanPda) {
-                        console.log("LoanCreated event:", event);
+                        // LoanCreated event received
                     }
                 }
             );

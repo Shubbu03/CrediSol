@@ -159,7 +159,6 @@ export const verifyReclaimProof = async ({
             }, 'confirmed');
 
         } catch (error: any) {
-            console.error('Transaction failed:', error);
             throw new Error(`Transaction failed: ${error.message}`);
         }
 
@@ -172,7 +171,7 @@ export const verifyReclaimProof = async ({
         console.error("Error verifying reclaim proof:", err);
 
         let errorMessage = 'Unknown error';
-        
+
         if (err instanceof Error) {
             errorMessage = err.message;
             const anyErr = err as any;
@@ -272,7 +271,7 @@ export const useReclaimProofGenPlaid = async ({
                 .catch(reject);
         });
 
-        console.log('Reclaim proof received:', proofs);
+        // Reclaim proof received successfully
 
         const result = await verifyReclaimProof({
             reclaimProof: proofs,

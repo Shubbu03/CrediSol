@@ -13,7 +13,9 @@ export function LoanCard({ loan }: { loan: LoanSummary }) {
             whileHover={{ scale: 1.02, y: -2 }}
         >
             <div className="flex items-center justify-between mb-4">
-                <div className="text-sm font-medium text-foreground/70">Credit Score: {loan.creditScore}</div>
+                <div className="text-sm font-medium text-foreground/70">
+                    Credit Score: {loan.creditScore !== undefined ? loan.creditScore : "N/A"}
+                </div>
                 <div className="px-2 py-1 rounded-full text-xs font-medium bg-trust-green/10 text-trust-green">
                     {bpsToPct(loan.aprBps)} APR
                 </div>

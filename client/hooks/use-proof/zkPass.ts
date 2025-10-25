@@ -85,7 +85,7 @@ export const useZkPassProofGen = async ({ address, program }: {
         //     alert("Proof generation failed");
         // }
 
-        console.log("zkPass proof result:", res);
+        // zkPass proof result received
 
         const now = Math.floor(Date.now() / 1000);
         const expiryTs = now + 24 * 7 * 60 * 60 - 200;
@@ -111,7 +111,7 @@ export const useZkPassProofGen = async ({ address, program }: {
         try {
             try {
                 const existingAttestation = await program.account.attestation.fetch(attestationPda);
-                console.log('Attestation already exists:', existingAttestation);
+                // Attestation already exists
                 return {
                     success: true,
                     signature: '',
@@ -119,7 +119,7 @@ export const useZkPassProofGen = async ({ address, program }: {
                     alreadyExists: true
                 };
             } catch (error) {
-                console.log('No existing attestation found, creating a new one...');
+                // No existing attestation found, creating a new one
             }
 
             const tx = await program.methods
@@ -142,17 +142,10 @@ export const useZkPassProofGen = async ({ address, program }: {
                 })
                 .rpc();
 
-            console.log("Transaction signature:", tx);
+            // Transaction signature received
 
             const listener = program.addEventListener("attestationPosted", (event, slot) => {
-                console.log("AttestationPosted event received:", {
-                    subject: event.subject.toBase58(),
-                    schemaId: event.schemaId,
-                    issuer: event.issuer.toBase58(),
-                    claimHash: Buffer.from(event.claimHash).toString("hex"),
-                    expiryTs: event.expiryTs.toString(),
-                    slot,
-                });
+                // AttestationPosted event received
             });
 
             setTimeout(() => {
@@ -167,7 +160,7 @@ export const useZkPassProofGen = async ({ address, program }: {
             };
         } catch (error: any) {
             if (error.message && error.message.includes('already been processed')) {
-                console.log('Transaction was already processed, checking attestation status...');
+                // Transaction was already processed, checking attestation status
                 try {
                     const attestation = await program.account.attestation.fetch(attestationPda);
                     return {
