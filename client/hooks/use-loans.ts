@@ -104,7 +104,7 @@ export function useLoansList() {
                     totalRepaidInterest: loan.account.totalRepaidInterest.toNumber(),
                     // Computed fields for UI
                     creditScore: undefined, // Will be fetched separately via useCreditScore hook
-                    termMonths: loan.account.termSecs.toNumber() / (30 * 24 * 60 * 60),
+                    termMonths: loan.account.termSecs.toNumber() / (30.44 * 24 * 60 * 60),
                     aprBps: loan.account.maxAprBps,
                     collateralPct: loan.account.minCollateralBps / 100,
                     targetAmount: loan.account.amount.toNumber(),
@@ -263,7 +263,7 @@ export function useLenderFund() {
             if (!program) throw new Error("Program not available");
 
             try {
-                notify("Processing funding transaction...", "info");
+                notify({ description: "Processing funding transaction...", type: "info" });
 
                 const loanPda = new PublicKey(loanId);
                 const loanSignerPda = useLoanSignerPda(publicKey, 0); // TODO: Extract loan ID from loanPda
@@ -291,10 +291,10 @@ export function useLenderFund() {
                     })
                     .rpc();
 
-                notify("Successfully funded loan!", "success");
+                notify({ description: "Successfully funded loan!", type: "success" });
                 return tx;
             } catch (error) {
-                notify(`Failed to fund loan: ${error}`, "error");
+                notify({ description: `Failed to fund loan: ${error}`, type: "error" });
                 throw error;
             }
         },
@@ -319,7 +319,7 @@ export function useFinalizeFunding() {
             if (!program) throw new Error("Program not available");
 
             try {
-                notify("Processing finalize funding transaction...", "info");
+                notify({ description: "Processing finalize funding transaction...", type: "info" });
 
                 const loanPda = new PublicKey(loanId);
                 const loanSignerPda = useLoanSignerPda(publicKey, 0); // TODO: Extract loan ID from loanPda
@@ -333,10 +333,10 @@ export function useFinalizeFunding() {
                     })
                     .rpc();
 
-                notify("Successfully finalized funding!", "success");
+                notify({ description: "Successfully finalized funding!", type: "success" });
                 return tx;
             } catch (error) {
-                notify(`Failed to finalize funding: ${error}`, "error");
+                notify({ description: `Failed to finalize funding: ${error}`, type: "error" });
                 throw error;
             }
         },
@@ -360,7 +360,7 @@ export function usePayoutToLenders() {
             if (!program) throw new Error("Program not available");
 
             try {
-                notify("Processing payout transaction...", "info");
+                notify({ description: "Processing payout transaction...", type: "info" });
 
                 const loanPda = new PublicKey(loanId);
                 const loanSignerPda = useLoanSignerPda(publicKey, 0); // TODO: Extract loan ID from loanPda
@@ -387,10 +387,10 @@ export function usePayoutToLenders() {
                     })
                     .rpc();
 
-                notify("Successfully processed payout!", "success");
+                notify({ description: "Successfully processed payout!", type: "success" });
                 return tx;
             } catch (error) {
-                notify(`Failed to process payout: ${error}`, "error");
+                notify({ description: `Failed to process payout: ${error}`, type: "error" });
                 throw error;
             }
         },

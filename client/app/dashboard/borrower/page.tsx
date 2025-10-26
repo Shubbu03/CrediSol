@@ -276,7 +276,7 @@ export default function BorrowerDashboard() {
                                                         Number(
                                                             loan.account.termSecs
                                                         ) /
-                                                        (60 * 60 * 24 * 30)
+                                                        (60 * 60 * 24 * 30.44)
                                                     ).toFixed(1)}{" "}
                                                     months
                                                 </div>

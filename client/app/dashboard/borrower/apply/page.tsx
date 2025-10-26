@@ -184,6 +184,17 @@ export default function Apply() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-6">
+          <button
+            onClick={() => router.push("/dashboard/borrower")}
+            className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back to Dashboard</span>
+          </button>
+        </div>
         <motion.div
           variants={containerVariants}
           initial="hidden"

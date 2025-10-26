@@ -139,27 +139,6 @@ export const postScoreAttestationTransaction = async ({
 
         console.log('Config PDA:', configPda.toBase58());
 
-        try {
-            const configAccount = await program.account.config.fetch(configPda);
-            const configData = {
-                admin: configAccount.admin.toBase58(),
-                attestor: configAccount.attestor.toBase58(),
-                secp256k1Pubkey: configAccount.secp256K1Pubkey ?
-                    Buffer.from(configAccount.secp256K1Pubkey).toString('hex') :
-                    'Not available',
-                bump: configAccount.bump,
-                paused: configAccount.paused
-            };
-            console.log('Config account data:', configData);
-
-            if (!configAccount.secp256K1Pubkey) {
-                throw new Error('secp256k1Pubkey is not set in the config account');
-            }
-        } catch (error) {
-            console.error('Failed to fetch config account:', error);
-            throw error;
-        }
-
         const attestorKeypair = getAttestorKeypair();
         console.log('Attestor public key:', attestorKeypair.publicKey.toBase58());
 
@@ -247,8 +226,7 @@ export const usePostScoreAttestation = () => {
 
             notify({
                 type: "success",
-                title: "Score Attestation Posted",
-                description: "Your score attestation has been submitted successfully!",
+                description: "Score attestation posted successfully!",
             });
 
             return { success, signature, scorePda };
@@ -257,7 +235,6 @@ export const usePostScoreAttestation = () => {
 
             notify({
                 type: "error",
-                title: "Error",
                 description: error.message || "Failed to post score attestation",
             });
 
