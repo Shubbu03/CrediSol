@@ -9,7 +9,6 @@ import { BN } from '@coral-xyz/anchor';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
-import { connection } from '../lib/solana/connection';
 import { notify } from '../lib/notify';
 
 export type LoanSummary = {
@@ -336,6 +335,7 @@ export function useLenderFund() {
         mutationFn: async ({ loanId, amount }: { loanId: string; amount: number }) => {
             if (!publicKey) throw new Error("Wallet not connected");
             if (!program) throw new Error("Program not available");
+            if (!program.account) throw new Error("Program account interface not available");
 
             try {
                 notify({ description: "Processing funding transaction...", type: "info" });
@@ -343,7 +343,7 @@ export function useLenderFund() {
                 const loanPda = new PublicKey(loanId);
 
                 // Fetch the loan account to get borrower and loan ID
-                const loanAccount = await (program.account as any).loan.fetch(loanPda);
+                const loanAccount = await (program.account as any).loanAccount.fetch(loanPda);
                 const borrower = loanAccount.borrower;
                 const actualLoanId = loanAccount.loanId.toString();
 
@@ -353,13 +353,26 @@ export function useLenderFund() {
                 // Get USDC mint from config
                 const config = await (program.account as any).config.fetch(configPda);
                 const usdcMint = config.usdcMint;
+                console.log("USDC MINT FOR FUNDING:", usdcMint.toString());
 
                 const lenderAta = await getAssociatedTokenAddress(usdcMint, publicKey);
                 const loanEscrowAta = await getAssociatedTokenAddress(usdcMint, loanSignerPda, true);
 
+                console.log("LENDER ATA ADDRESS:", lenderAta.toString());
+                console.log("LOAN ESCROW ATA ADDRESS:", loanEscrowAta.toString());
+
+                // Check lender's actual token balance
+                try {
+                    const lenderTokenAccount = await program.provider.connection.getTokenAccountBalance(lenderAta);
+                    console.log("LENDER TOKEN BALANCE:", lenderTokenAccount.value.uiAmount, "USDC");
+                    console.log("LENDER TOKEN BALANCE (RAW):", lenderTokenAccount.value.amount, "minor units");
+                } catch (error) {
+                    console.log("LENDER ATA DOES NOT EXIST OR ERROR:", error);
+                }
+
                 // Check if lender ATA exists, create if not
-                const lenderAtaInfo = await connection.getAccountInfo(lenderAta);
-                const loanEscrowAtaInfo = await connection.getAccountInfo(loanEscrowAta);
+                const lenderAtaInfo = await program.provider.connection.getAccountInfo(lenderAta);
+                const loanEscrowAtaInfo = await program.provider.connection.getAccountInfo(loanEscrowAta);
                 const instructions: TransactionInstruction[] = [];
 
                 if (!lenderAtaInfo) {
@@ -383,7 +396,7 @@ export function useLenderFund() {
                         )
                     );
                 }
-
+                console.log("AMOUNT FUNDED TO LOAN::", new BN(amount))
                 const tx = await program.methods
                     .lenderFund(new BN(amount))
                     .accountsStrict({
@@ -403,7 +416,11 @@ export function useLenderFund() {
                 notify({ description: "Successfully funded loan!", type: "success" });
                 return tx;
             } catch (error) {
-                notify({ description: `Failed to fund loan: ${error}`, type: "error" });
+                notify({
+                    description: "An error occurred while funding the loan. Please try again later.",
+                    type: "error"
+                });
+                console.error("Funding error:", error)
                 throw error;
             }
         },
@@ -510,7 +527,7 @@ export function usePayoutToLenders() {
 }
 
 export function formatCurrencyMinor(amountMinor: number) {
-    return `$${(amountMinor / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    return `$${(amountMinor / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 export function bpsToPct(aprBps: number) {

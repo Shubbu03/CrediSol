@@ -204,7 +204,7 @@ export default function LoanDetailPage() {
                                     className="space-y-4"
                                     onSubmit={(e) => {
                                         e.preventDefault();
-                                        const minor = Math.round(Number(amount || 0) * 100);
+                                        const minor = Math.round(Number(amount || 0) * 1_000_000);
                                         if (!minor || !loanId) return;
                                         fund.mutate({ loanId, amount: minor });
                                     }}
@@ -219,7 +219,7 @@ export default function LoanDetailPage() {
                                             inputMode="decimal"
                                             type="number"
                                             min="1"
-                                            max={remainingAmount / 100}
+                                            max={remainingAmount / 1_000_000}
                                         />
                                         <p className="text-xs text-foreground/60 mt-1">
                                             Maximum: {formatCurrencyMinor(remainingAmount)}
@@ -236,15 +236,6 @@ export default function LoanDetailPage() {
                                         </motion.button>
                                     </div>
                                 </form>
-
-                                {fund.error && (
-                                    <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                        <div className="flex items-center gap-2 text-red-500">
-                                            <AlertCircle className="w-4 h-4" />
-                                            <span className="text-sm">Failed to fund loan: {fund.error.message}</span>
-                                        </div>
-                                    </div>
-                                )}
                             </motion.div>
                         )}
 
