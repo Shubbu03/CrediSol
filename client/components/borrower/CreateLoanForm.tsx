@@ -12,6 +12,9 @@ import { usePostScoreAttestation } from "../../hooks/use-post-score-attestation"
 import { PublicKey } from "@solana/web3.js";
 
 
+const MIN_CREDIT_SCORE = 150; // Minimum credit score required to apply for a loan
+const MAX_CREDIT_SCORE = 850; // Maximum possible credit score
+
 const loanFormSchema = z.object({
     amount: z.coerce
         .number()
@@ -96,6 +99,9 @@ export function CreateLoanForm({ isVerified, creditData }: CreateLoanFormProps) 
     );
     const totalRepayment = amount + estimatedInterest;
     const requiredCollateral = Math.round((amount * minCollateralBps) / 10000);
+    
+    // Check if credit score meets minimum requirement
+    const meetsCreditScoreRequirement = creditData.score >= MIN_CREDIT_SCORE;
 
     const onSubmit = async (data: LoanFormValues) => {
         if (isSubmitting) return;
@@ -105,6 +111,10 @@ export function CreateLoanForm({ isVerified, creditData }: CreateLoanFormProps) 
         }
         if (!isVerified) {
             setError("Please complete verification first");
+            return;
+        }
+        if (!meetsCreditScoreRequirement) {
+            setError(`Credit score must be at least ${MIN_CREDIT_SCORE} to apply for a loan. Your current score is ${creditData.score}.`);
             return;
         }
         if (!loansMarketplaceProgram || !scoreAttestorProgram) {
@@ -153,11 +163,14 @@ export function CreateLoanForm({ isVerified, creditData }: CreateLoanFormProps) 
 
             if (success) {
                 setSuccess(true);
+                notify({
+                    type: "success",
+                    description: "Loan created successfully! Return to dashboard to view your loans.",
+                });
             } else if (error?.includes("already been processed")) {
                 setSuccess(true);
                 notify({
                     type: "info",
-                    title: "Transaction Already Processed",
                     description: "Your loan request was already submitted successfully.",
                 });
             } else {
@@ -190,8 +203,8 @@ export function CreateLoanForm({ isVerified, creditData }: CreateLoanFormProps) 
                 <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/10 to-violet-500/10 rounded-full blur-3xl" />
             </div>
 
-            <div className="relative z-10 min-h-screen">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
+            <div className="relative z-10">
+                <div className="max-w-3xl mx-auto">
                     <motion.div variants={containerVariants} initial="hidden" animate="visible">
                         <motion.div variants={itemVariants} className="mb-8">
                             <h1 className="text-3xl font-bold mb-2">Create New Loan Request</h1>
@@ -215,7 +228,7 @@ export function CreateLoanForm({ isVerified, creditData }: CreateLoanFormProps) 
                                 className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-500 flex items-center gap-2"
                             >
                                 <AlertCircle className="w-5 h-5" />
-                                Loan created successfully!
+                                <span>Loan created successfully! Return to your dashboard to view your loans.</span>
                             </motion.div>
                         )}
 
@@ -263,6 +276,22 @@ export function CreateLoanForm({ isVerified, creditData }: CreateLoanFormProps) 
                                                     <p className="text-sm text-foreground/90">
                                                         Please complete all verification steps before submitting a loan
                                                         request.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {!meetsCreditScoreRequirement && (
+                                        <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                            <div className="flex items-start gap-3">
+                                                <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+                                                <div>
+                                                    <p className="text-sm font-semibold text-foreground/90 mb-1">
+                                                        Credit Score Too Low
+                                                    </p>
+                                                    <p className="text-sm text-foreground/80">
+                                                        You need a minimum credit score of {MIN_CREDIT_SCORE} to apply for a loan. 
+                                                        Your current score is {creditData.score}.
                                                     </p>
                                                 </div>
                                             </div>
@@ -421,19 +450,21 @@ export function CreateLoanForm({ isVerified, creditData }: CreateLoanFormProps) 
                                     <div className="pt-2">
                                         <button
                                             type="submit"
-                                            disabled={isSubmitting || !isVerified}
+                                            disabled={isSubmitting || !isVerified || !meetsCreditScoreRequirement}
                                             className={`w-full px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${isSubmitting
                                                     ? "bg-trust-green/50 cursor-not-allowed text-foreground/50"
-                                                    : !isVerified
+                                                    : !isVerified || !meetsCreditScoreRequirement
                                                         ? "bg-surface-2 border border-border/30 cursor-not-allowed text-foreground/50"
                                                         : "bg-trust-green hover:bg-trust-green/90 text-white shadow-lg shadow-trust-green/20 hover:shadow-trust-green/30"
                                                 }`}
                                         >
                                             {!isVerified
                                                 ? "Complete Verification First"
-                                                : isSubmitting
-                                                    ? "Creating Loan Request..."
-                                                    : "Create Loan Request"}
+                                                : !meetsCreditScoreRequirement
+                                                    ? "Credit Score Too Low"
+                                                    : isSubmitting
+                                                        ? "Creating Loan Request..."
+                                                        : "Create Loan Request"}
                                         </button>
                                     </div>
                                 </form>

@@ -55,9 +55,22 @@ export const createLoanTransaction = async ({
         const finalLoanId = loanId ?? new BN(Keypair.generate().publicKey.toBytes().slice(0, 8));
 
         const [loanPda] = PublicKey.findProgramAddressSync(
-            [Buffer.from("loan"), finalLoanId.toArrayLike(Buffer, "le", 8)],
+            [Buffer.from("loan"), borrower.toBuffer(), finalLoanId.toArrayLike(Buffer, "le", 8)],
             program.programId
         );
+
+        try {
+            const existingLoan = await (program.account as any).loanAccount.fetch(loanPda);
+            if (existingLoan) {
+                console.log("Loan already exists at:", loanPda.toString());
+                return {
+                    success: false,
+                    error: "A loan with this ID already exists. Please use different loan parameters.",
+                };
+            }
+        } catch (error) {
+            console.log("Loan PDA is new, proceeding with creation");
+        }
 
         const tx = await program.methods
             .createLoanRequest(
@@ -115,18 +128,33 @@ export const useCreateLoan = () => {
                     preflightCommitment: "confirmed",
                 });
             } catch (err: any) {
+                console.error("Transaction error:", err);
+
                 if (err.getLogs) {
                     const logs = await err.getLogs(connection);
                     console.error("Transaction logs:", logs);
                 }
 
-                if (err.message?.includes("already been processed")) {
-                    notify({
-                        type: "info",
-                        title: "Transaction Already Processed",
-                        description: "Your loan request was already submitted successfully.",
-                    });
-                    return { success: true, loanPda };
+                const errorMessage = err.message || err.toString();
+                if (errorMessage.includes("already been processed") ||
+                    errorMessage.includes("already processed") ||
+                    errorMessage.includes("duplicate") ||
+                    errorMessage.includes("Blockhash not found")) {
+
+                    console.log("Transaction was already processed, checking if loan exists...");
+
+                    try {
+                        const existingLoan = await (params.program.account as any).loanAccount.fetch(loanPda);
+                        if (existingLoan) {
+                            notify({
+                                type: "info",
+                                description: "Your loan request was already submitted successfully.",
+                            });
+                            return { success: true, loanPda };
+                        }
+                    } catch (fetchError) {
+                        console.log("Could not fetch existing loan:", fetchError);
+                    }
                 }
 
                 throw err;
