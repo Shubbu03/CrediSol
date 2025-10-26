@@ -313,7 +313,12 @@ export function useCreditScore(borrower: string, loanId: string) {
                     pdBps: scoreAttestation.pdBps,
                     recommendedMinCollateralBps: scoreAttestation.recommendedMinCollateralBps,
                 };
-            } catch (error) {
+            } catch (error: any) {
+                if (error.message?.includes("Account does not exist") || 
+                    error.message?.includes("has no data")) {
+                    console.log("No score attestation found for loan:", loanId);
+                    return null;
+                }
                 console.error("Failed to fetch credit score:", error);
                 return null;
             }

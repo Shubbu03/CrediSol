@@ -119,7 +119,7 @@ export default function MarketplacePage() {
             <div className="min-h-screen bg-background">
                 <div className="absolute inset-0 -z-10">
                     <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-trust-green/10 to-emerald-500/10 rounded-full blur-3xl" />
-                    <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/10 to-violet-500/10 rounded-full blur-3xl" />
+                    {/* <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/10 to-violet-500/10 rounded-full blur-3xl" /> */}
                 </div>
 
                 <div className="relative z-10 min-h-screen">
