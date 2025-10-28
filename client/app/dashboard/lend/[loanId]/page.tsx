@@ -3,10 +3,18 @@
 import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import dynamic from "next/dynamic";
 import { useLoanDetail, useLenderFund, useCreditScore, bpsToPct, formatCurrencyMinor, getLoanState } from "../../../../hooks/use-loans";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { BackButton } from "../../../../components/shared/back-button";
+
+const WalletMultiButton = dynamic(
+    () =>
+        import("@solana/wallet-adapter-react-ui").then(
+            (mod) => mod.WalletMultiButton
+        ),
+    { ssr: false }
+);
 import {
     Calendar,
     DollarSign,
@@ -28,6 +36,7 @@ export default function LoanDetailPage() {
     const { data: creditScore } = useCreditScore(loan?.borrower || "", loanId || "");
     const fund = useLenderFund();
     const [amount, setAmount] = useState<string>("");
+    const isSubmittingRef = useRef(false);
 
     const progress = loan ? Math.min(100, Math.round((loan.fundedAmount / loan.targetAmount) * 100)) : 0;
     const remainingAmount = loan ? loan.targetAmount - loan.fundedAmount : 0;
@@ -204,9 +213,24 @@ export default function LoanDetailPage() {
                                     className="space-y-4"
                                     onSubmit={(e) => {
                                         e.preventDefault();
+                                        
+                                        // Prevent duplicate submissions
+                                        if (isSubmittingRef.current || fund.isPending) {
+                                            return;
+                                        }
+                                        
                                         const minor = Math.round(Number(amount || 0) * 1_000_000);
                                         if (!minor || !loanId) return;
-                                        fund.mutate({ loanId, amount: minor });
+                                        
+                                        isSubmittingRef.current = true;
+                                        fund.mutate(
+                                            { loanId, amount: minor },
+                                            {
+                                                onSettled: () => {
+                                                    isSubmittingRef.current = false;
+                                                }
+                                            }
+                                        );
                                     }}
                                 >
                                     <div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import * as anchor from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import type { LoansMarketplace } from "../lib/program/types/loans_marketplace";
@@ -16,15 +16,22 @@ export function useUserLoans(
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Memoize the address to prevent unnecessary re-renders
+    const memoizedAddress = useMemo(() => borrowerAddress, [borrowerAddress]);
+
     useEffect(() => {
-        if (!program || !borrowerAddress) return;
+        if (!program || !memoizedAddress) {
+            setLoans([]);
+            setLoading(false);
+            return;
+        }
 
         const fetchLoans = async () => {
             try {
                 setLoading(true);
                 setError(null);
 
-                const borrower = new PublicKey(borrowerAddress);
+                const borrower = new PublicKey(memoizedAddress);
 
                 const allLoans = await program.account.loanAccount.all([{
                     memcmp: {
@@ -33,12 +40,6 @@ export function useUserLoans(
                     },
                 },
                 ]);
-
-                // const sorted = allLoans.sort(
-                //     (a, b) =>
-                //         Number(b.account.loanId?.toString() || 0) -
-                //         Number(a.account.loanId?.toString() || 0)
-                // );
 
                 const sorted = allLoans.sort().reverse();
 
@@ -57,7 +58,12 @@ export function useUserLoans(
         };
 
         fetchLoans();
-    }, [program, borrowerAddress]);
+
+        // Auto-refresh every 30 seconds to catch state changes (reduced frequency)
+        const interval = setInterval(fetchLoans, 30000);
+
+        return () => clearInterval(interval);
+    }, [program, memoizedAddress]);
 
     return { loans, loading, error };
 }

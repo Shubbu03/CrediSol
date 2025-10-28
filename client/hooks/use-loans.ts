@@ -420,12 +420,26 @@ export function useLenderFund() {
 
                 notify({ description: "Successfully funded loan!", type: "success" });
                 return tx;
-            } catch (error) {
+            } catch (error: any) {
+                console.error("Funding error:", error);
+                
+                // Handle "already processed" errors gracefully
+                const errorMessage = error.message || error.toString();
+                if (errorMessage.includes("already been processed") || 
+                    errorMessage.includes("already processed") ||
+                    errorMessage.includes("duplicate")) {
+                    
+                    notify({
+                        description: "You may have already funded this loan. Refreshing your loans...",
+                        type: "info"
+                    });
+                    return { success: true };
+                }
+                
                 notify({
                     description: "An error occurred while funding the loan. Please try again later.",
                     type: "error"
                 });
-                console.error("Funding error:", error)
                 throw error;
             }
         },
