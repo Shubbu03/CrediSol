@@ -10,6 +10,7 @@ import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import { notify } from '../lib/notify';
+import { termSecsToMonths } from '../lib/utils';
 
 export type LoanSummary = {
     id: string;
@@ -46,6 +47,13 @@ export type PortfolioPosition = {
     repaidInterest: number;
     proRataBps: number;
     state: number;
+    // Additional loan details
+    amount?: number;
+    termMonths?: number;
+    aprBps?: number;
+    fundedAmount?: number;
+    startTs?: number;
+    dueTs?: number;
 };
 
 type FilterState = {
@@ -112,7 +120,7 @@ export function useLoansList() {
                     totalRepaidInterest: loan.account.totalRepaidInterest.toNumber(),
                     // Computed fields for UI
                     creditScore: undefined, // Will be fetched separately via useCreditScore hook
-                    termMonths: loan.account.termSecs.toNumber() / (30.44 * 24 * 60 * 60),
+                    termMonths: termSecsToMonths(loan.account.termSecs.toNumber()),
                     aprBps: loan.account.maxAprBps,
                     collateralPct: loan.account.minCollateralBps / 100,
                     targetAmount: loan.account.amount.toNumber(),
@@ -166,7 +174,7 @@ export function useRecentLoansList() {
                     totalRepaidInterest: loan.account.totalRepaidInterest.toNumber(),
                     // Computed fields for UI
                     creditScore: undefined,
-                    termMonths: Math.round(loan.account.termSecs.toNumber() / (30 * 24 * 60 * 60) * 10) / 10, // Round to 1 decimal place
+                    termMonths: termSecsToMonths(loan.account.termSecs.toNumber()),
                     aprBps: loan.account.maxAprBps,
                     collateralPct: loan.account.minCollateralBps / 100,
                     targetAmount: loan.account.amount.toNumber(),
@@ -220,7 +228,7 @@ export function useLoanDetail(loanId?: string) {
                     totalRepaidInterest: loan.totalRepaidInterest.toNumber(),
                     // Computed fields for UI
                     creditScore: undefined, // Will be fetched separately via useCreditScore hook
-                    termMonths: Math.round(loan.termSecs.toNumber() / (30 * 24 * 60 * 60) * 10) / 10, // Round to 1 decimal place
+                    termMonths: termSecsToMonths(loan.termSecs.toNumber()),
                     aprBps: loan.maxAprBps,
                     collateralPct: loan.minCollateralBps / 100,
                     targetAmount: loan.amount.toNumber(),
@@ -248,20 +256,49 @@ export function usePortfolio() {
                 const lenderShares = await (program.account as any).lenderShare.all([
                     {
                         memcmp: {
-                            offset: 8 + 32, // Skip discriminator + loan PDA
+                            offset: 8 + 1, // Skip discriminator + bump (8 + 1 = 9)
                             bytes: publicKey!.toBase58(),
                         },
                     },
                 ]);
 
-                return lenderShares.map((share: any) => ({
-                    loanId: share.account.loan.toBase58(),
-                    principal: share.account.principal.toNumber(),
-                    repaidPrincipal: share.account.repaidPrincipal.toNumber(),
-                    repaidInterest: share.account.repaidInterest.toNumber(),
-                    proRataBps: share.account.proRataBps,
-                    state: 0, // Will need to fetch loan state separately
-                }));
+                // Fetch loan details for each position
+                const positionsWithDetails = await Promise.all(
+                    lenderShares.map(async (share: any) => {
+                        try {
+                            const loanPda = share.account.loan;
+                            const loan = await (program.account as any).loanAccount.fetch(loanPda);
+                            
+                            return {
+                                loanId: loanPda.toBase58(),
+                                principal: share.account.principal.toNumber(),
+                                repaidPrincipal: share.account.repaidPrincipal.toNumber(),
+                                repaidInterest: share.account.repaidInterest.toNumber(),
+                                proRataBps: share.account.proRataBps,
+                                state: loan.state,
+                                amount: loan.amount.toNumber(),
+                                termMonths: termSecsToMonths(loan.termSecs.toNumber()),
+                                aprBps: loan.actualAprBps || loan.maxAprBps,
+                                fundedAmount: loan.fundedAmount.toNumber(),
+                                startTs: loan.startTs.toNumber(),
+                                dueTs: loan.dueTs.toNumber(),
+                            } as PortfolioPosition;
+                        } catch (err) {
+                            console.error("Error fetching loan details:", err);
+                            // Fallback to basic data if loan fetch fails
+                            return {
+                                loanId: share.account.loan.toBase58(),
+                                principal: share.account.principal.toNumber(),
+                                repaidPrincipal: share.account.repaidPrincipal.toNumber(),
+                                repaidInterest: share.account.repaidInterest.toNumber(),
+                                proRataBps: share.account.proRataBps,
+                                state: 0,
+                            } as PortfolioPosition;
+                        }
+                    })
+                );
+
+                return positionsWithDetails;
             } catch (error) {
                 console.error("Failed to fetch portfolio:", error);
                 return [];

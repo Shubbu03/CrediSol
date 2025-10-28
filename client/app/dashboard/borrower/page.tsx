@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useUserLoans } from "../../../hooks/use-user-loan";
 import { useLoansMarketplaceProgram } from "../../../hooks/use-get-program";
 import { notify } from "../../../lib/notify";
+import { termSecsToMonths } from "../../../lib/utils";
 
 const WalletMultiButton = dynamic(
     () =>
@@ -240,7 +241,7 @@ export default function BorrowerDashboard() {
                                             const targetAmount = Number(loan.account.amount);
                                             const fundingProgress = Math.round((fundedAmount / targetAmount) * 100);
                                             const loanAmount = (targetAmount / 1_000_000).toLocaleString();
-                                            const termMonths = (Number(loan.account.termSecs) / (60 * 60 * 24 * 30)).toFixed(1);
+                                            const termMonths = termSecsToMonths(Number(loan.account.termSecs)).toFixed(1);
 
                                             const getStatusConfig = (state: number) => {
                                                 switch (state) {
