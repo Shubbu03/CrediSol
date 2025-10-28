@@ -2,17 +2,20 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { create } from "zustand";
-import { useLoansProgram, useConfigPda, useLoanPda, useLoanSignerPda, useLenderSharePda, TOKEN_PROGRAM_ID, SystemProgram, useScoreAttestorProgram, useScoreAttestationPda } from "../lib/solana/program";
+import { useLoansMarketplaceProgram, useScoreAttestorProgram } from "./use-get-program";
+import { useConfigPda, useLoanPda, useLoanSignerPda, useLenderSharePda, TOKEN_PROGRAM_ID, SystemProgram } from "../lib/solana/program";
+import { useScoreAttestationPda } from "../lib/solana/program";
 import { BN } from '@coral-xyz/anchor';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { getAssociatedTokenAddress } from '@solana/spl-token';
+import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import { notify } from '../lib/notify';
+import { termSecsToMonths } from '../lib/utils';
 
 export type LoanSummary = {
     id: string;
     borrower: string;
-    loanId: number;
+    loanId: string; // Changed from number to string to handle large BN values
     amount: number;
     termSecs: number;
     maxAprBps: number;
@@ -44,6 +47,13 @@ export type PortfolioPosition = {
     repaidInterest: number;
     proRataBps: number;
     state: number;
+    // Additional loan details
+    amount?: number;
+    termMonths?: number;
+    aprBps?: number;
+    fundedAmount?: number;
+    startTs?: number;
+    dueTs?: number;
 };
 
 type FilterState = {
@@ -62,15 +72,21 @@ export const useLoanFiltersStore = create<FilterState>((set) => ({
 
 function applyFilters(loans: LoanSummary[], filters: FilterState): LoanSummary[] {
     return loans.filter((l) => {
+        // Term filter: check if loan term matches the selected term exactly
         if (filters.termMonths && l.termMonths !== filters.termMonths) return false;
+
+        // APR filter: check if loan APR meets minimum requirement
         if (filters.minAprBps && l.aprBps < filters.minAprBps) return false;
+
+        // Credit score filter: check if loan has minimum credit score
         if (filters.minScore && (l.creditScore ?? 0) < filters.minScore) return false;
+
         return true;
     });
 }
 
 export function useLoansList() {
-    const program = useLoansProgram();
+    const program = useLoansMarketplaceProgram();
     const filters = useLoanFiltersStore();
 
     return useQuery({
@@ -85,7 +101,7 @@ export function useLoansList() {
                 const mappedLoans: LoanSummary[] = loans.map((loan: any) => ({
                     id: loan.publicKey.toBase58(),
                     borrower: loan.account.borrower.toBase58(),
-                    loanId: loan.account.loanId.toNumber(),
+                    loanId: loan.account.loanId.toString(), // Convert to string to avoid 53-bit limit
                     amount: loan.account.amount.toNumber(),
                     termSecs: loan.account.termSecs.toNumber(),
                     maxAprBps: loan.account.maxAprBps,
@@ -104,12 +120,17 @@ export function useLoansList() {
                     totalRepaidInterest: loan.account.totalRepaidInterest.toNumber(),
                     // Computed fields for UI
                     creditScore: undefined, // Will be fetched separately via useCreditScore hook
-                    termMonths: loan.account.termSecs.toNumber() / (30.44 * 24 * 60 * 60),
+                    termMonths: termSecsToMonths(loan.account.termSecs.toNumber()),
                     aprBps: loan.account.maxAprBps,
                     collateralPct: loan.account.minCollateralBps / 100,
                     targetAmount: loan.account.amount.toNumber(),
                 }));
-                return applyFilters(mappedLoans, filters);
+
+                // Sort by creation time (most recent first) and apply filters
+                const sortedLoans = mappedLoans.sort((a, b) => b.startTs - a.startTs);
+                const filteredLoans = applyFilters(sortedLoans, filters);
+
+                return filteredLoans;
             } catch (error) {
                 console.error("Failed to fetch loans:", error);
                 return [];
@@ -118,8 +139,62 @@ export function useLoansList() {
     });
 }
 
+export function useRecentLoansList() {
+    const program = useLoansMarketplaceProgram();
+    const filters = useLoanFiltersStore();
+
+    return useQuery({
+        queryKey: ["recent-loans", filters.termMonths, filters.minAprBps, filters.minScore],
+        enabled: !!program,
+        queryFn: async () => {
+            if (!program) {
+                throw new Error("Program not available");
+            }
+            try {
+                const loans = await (program.account as any).loanAccount.all();
+                const mappedLoans: LoanSummary[] = loans.map((loan: any) => ({
+                    id: loan.publicKey.toBase58(),
+                    borrower: loan.account.borrower.toBase58(),
+                    loanId: loan.account.loanId.toString(),
+                    amount: loan.account.amount.toNumber(),
+                    termSecs: loan.account.termSecs.toNumber(),
+                    maxAprBps: loan.account.maxAprBps,
+                    minCollateralBps: loan.account.minCollateralBps,
+                    fundingDeadline: loan.account.fundingDeadline.toNumber(),
+                    state: loan.account.state,
+                    fundedAmount: loan.account.fundedAmount.toNumber(),
+                    collateralAmount: loan.account.collateralAmount.toNumber(),
+                    actualAprBps: loan.account.actualAprBps,
+                    startTs: loan.account.startTs.toNumber(),
+                    dueTs: loan.account.dueTs.toNumber(),
+                    lastAccrualTs: loan.account.lastAccrualTs.toNumber(),
+                    accruedInterest: loan.account.accruedInterest.toNumber(),
+                    outstandingPrincipal: loan.account.outstandingPrincipal.toNumber(),
+                    totalRepaidPrincipal: loan.account.totalRepaidPrincipal.toNumber(),
+                    totalRepaidInterest: loan.account.totalRepaidInterest.toNumber(),
+                    // Computed fields for UI
+                    creditScore: undefined,
+                    termMonths: termSecsToMonths(loan.account.termSecs.toNumber()),
+                    aprBps: loan.account.maxAprBps,
+                    collateralPct: loan.account.minCollateralBps / 100,
+                    targetAmount: loan.account.amount.toNumber(),
+                }));
+
+                // Sort by creation time (most recent first), apply filters, then limit to 3
+                const sortedLoans = mappedLoans.sort((a, b) => b.startTs - a.startTs);
+                const filteredLoans = applyFilters(sortedLoans, filters);
+
+                return filteredLoans.slice(0, 3); // Return only 3 most recent
+            } catch (error) {
+                console.error("Failed to fetch recent loans:", error);
+                return [];
+            }
+        },
+    });
+}
+
 export function useLoanDetail(loanId?: string) {
-    const program = useLoansProgram();
+    const program = useLoansMarketplaceProgram();
 
     return useQuery({
         queryKey: ["loan", loanId],
@@ -134,7 +209,7 @@ export function useLoanDetail(loanId?: string) {
                 return {
                     id: loanPda.toBase58(),
                     borrower: loan.borrower.toBase58(),
-                    loanId: loan.loanId.toNumber(),
+                    loanId: loan.loanId.toString(), // Convert to string to avoid 53-bit limit
                     amount: loan.amount.toNumber(),
                     termSecs: loan.termSecs.toNumber(),
                     maxAprBps: loan.maxAprBps,
@@ -153,7 +228,7 @@ export function useLoanDetail(loanId?: string) {
                     totalRepaidInterest: loan.totalRepaidInterest.toNumber(),
                     // Computed fields for UI
                     creditScore: undefined, // Will be fetched separately via useCreditScore hook
-                    termMonths: loan.termSecs.toNumber() / (30 * 24 * 60 * 60),
+                    termMonths: termSecsToMonths(loan.termSecs.toNumber()),
                     aprBps: loan.maxAprBps,
                     collateralPct: loan.minCollateralBps / 100,
                     targetAmount: loan.amount.toNumber(),
@@ -167,7 +242,7 @@ export function useLoanDetail(loanId?: string) {
 }
 
 export function usePortfolio() {
-    const program = useLoansProgram();
+    const program = useLoansMarketplaceProgram();
     const { publicKey } = useWallet();
 
     return useQuery({
@@ -181,20 +256,49 @@ export function usePortfolio() {
                 const lenderShares = await (program.account as any).lenderShare.all([
                     {
                         memcmp: {
-                            offset: 8 + 32, // Skip discriminator + loan PDA
+                            offset: 8 + 1, // Skip discriminator + bump (8 + 1 = 9)
                             bytes: publicKey!.toBase58(),
                         },
                     },
                 ]);
 
-                return lenderShares.map((share: any) => ({
-                    loanId: share.account.loan.toBase58(),
-                    principal: share.account.principal.toNumber(),
-                    repaidPrincipal: share.account.repaidPrincipal.toNumber(),
-                    repaidInterest: share.account.repaidInterest.toNumber(),
-                    proRataBps: share.account.proRataBps,
-                    state: 0, // Will need to fetch loan state separately
-                }));
+                // Fetch loan details for each position
+                const positionsWithDetails = await Promise.all(
+                    lenderShares.map(async (share: any) => {
+                        try {
+                            const loanPda = share.account.loan;
+                            const loan = await (program.account as any).loanAccount.fetch(loanPda);
+                            
+                            return {
+                                loanId: loanPda.toBase58(),
+                                principal: share.account.principal.toNumber(),
+                                repaidPrincipal: share.account.repaidPrincipal.toNumber(),
+                                repaidInterest: share.account.repaidInterest.toNumber(),
+                                proRataBps: share.account.proRataBps,
+                                state: loan.state,
+                                amount: loan.amount.toNumber(),
+                                termMonths: termSecsToMonths(loan.termSecs.toNumber()),
+                                aprBps: loan.actualAprBps || loan.maxAprBps,
+                                fundedAmount: loan.fundedAmount.toNumber(),
+                                startTs: loan.startTs.toNumber(),
+                                dueTs: loan.dueTs.toNumber(),
+                            } as PortfolioPosition;
+                        } catch (err) {
+                            console.error("Error fetching loan details:", err);
+                            // Fallback to basic data if loan fetch fails
+                            return {
+                                loanId: share.account.loan.toBase58(),
+                                principal: share.account.principal.toNumber(),
+                                repaidPrincipal: share.account.repaidPrincipal.toNumber(),
+                                repaidInterest: share.account.repaidInterest.toNumber(),
+                                proRataBps: share.account.proRataBps,
+                                state: 0,
+                            } as PortfolioPosition;
+                        }
+                    })
+                );
+
+                return positionsWithDetails;
             } catch (error) {
                 console.error("Failed to fetch portfolio:", error);
                 return [];
@@ -223,11 +327,17 @@ export function useCreditScore(borrower: string, loanId: string) {
 
     return useQuery({
         queryKey: ["creditScore", borrower, loanId],
-        enabled: !!scoreProgram,
+        enabled: !!scoreProgram && !!borrower && !!loanId && borrower.length > 0 && loanId.length > 0,
         queryFn: async () => {
             if (!scoreProgram) {
                 throw new Error("Score program not available");
             }
+
+            // Validate inputs
+            if (!borrower || !loanId || borrower.length === 0 || loanId.length === 0) {
+                throw new Error("Invalid borrower or loan ID");
+            }
+
             try {
                 const borrowerPubkey = new PublicKey(borrower);
                 const loanPubkey = new PublicKey(loanId);
@@ -240,18 +350,24 @@ export function useCreditScore(borrower: string, loanId: string) {
                     pdBps: scoreAttestation.pdBps,
                     recommendedMinCollateralBps: scoreAttestation.recommendedMinCollateralBps,
                 };
-            } catch (error) {
+            } catch (error: any) {
+                if (error.message?.includes("Account does not exist") || 
+                    error.message?.includes("has no data")) {
+                    console.log("No score attestation found for loan:", loanId);
+                    return null;
+                }
                 console.error("Failed to fetch credit score:", error);
                 return null;
             }
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
+        retry: false, // Don't retry on error
     });
 }
 
 // Mutations
 export function useLenderFund() {
-    const program = useLoansProgram();
+    const program = useLoansMarketplaceProgram();
     const { publicKey } = useWallet();
     const configPda = useConfigPda();
     const qc = useQueryClient();
@@ -261,21 +377,68 @@ export function useLenderFund() {
         mutationFn: async ({ loanId, amount }: { loanId: string; amount: number }) => {
             if (!publicKey) throw new Error("Wallet not connected");
             if (!program) throw new Error("Program not available");
+            if (!program.account) throw new Error("Program account interface not available");
 
             try {
                 notify({ description: "Processing funding transaction...", type: "info" });
 
                 const loanPda = new PublicKey(loanId);
-                const loanSignerPda = useLoanSignerPda(publicKey, 0); // TODO: Extract loan ID from loanPda
+
+                // Fetch the loan account to get borrower and loan ID
+                const loanAccount = await (program.account as any).loanAccount.fetch(loanPda);
+                const borrower = loanAccount.borrower;
+                const actualLoanId = loanAccount.loanId.toString();
+
+                const loanSignerPda = useLoanSignerPda(borrower, actualLoanId);
                 const lenderSharePda = useLenderSharePda(loanPda, publicKey);
 
                 // Get USDC mint from config
                 const config = await (program.account as any).config.fetch(configPda);
                 const usdcMint = config.usdcMint;
+                console.log("USDC MINT FOR FUNDING:", usdcMint.toString());
 
                 const lenderAta = await getAssociatedTokenAddress(usdcMint, publicKey);
                 const loanEscrowAta = await getAssociatedTokenAddress(usdcMint, loanSignerPda, true);
 
+                console.log("LENDER ATA ADDRESS:", lenderAta.toString());
+                console.log("LOAN ESCROW ATA ADDRESS:", loanEscrowAta.toString());
+
+                // Check lender's actual token balance
+                try {
+                    const lenderTokenAccount = await program.provider.connection.getTokenAccountBalance(lenderAta);
+                    console.log("LENDER TOKEN BALANCE:", lenderTokenAccount.value.uiAmount, "USDC");
+                    console.log("LENDER TOKEN BALANCE (RAW):", lenderTokenAccount.value.amount, "minor units");
+                } catch (error) {
+                    console.log("LENDER ATA DOES NOT EXIST OR ERROR:", error);
+                }
+
+                // Check if lender ATA exists, create if not
+                const lenderAtaInfo = await program.provider.connection.getAccountInfo(lenderAta);
+                const loanEscrowAtaInfo = await program.provider.connection.getAccountInfo(loanEscrowAta);
+                const instructions: TransactionInstruction[] = [];
+
+                if (!lenderAtaInfo) {
+                    instructions.push(
+                        createAssociatedTokenAccountInstruction(
+                            publicKey, // payer
+                            lenderAta, // ata
+                            publicKey, // owner
+                            usdcMint // mint
+                        )
+                    );
+                }
+
+                if (!loanEscrowAtaInfo) {
+                    instructions.push(
+                        createAssociatedTokenAccountInstruction(
+                            publicKey, // payer
+                            loanEscrowAta, // ata
+                            loanSignerPda, // owner (the loan signer PDA)
+                            usdcMint // mint
+                        )
+                    );
+                }
+                console.log("AMOUNT FUNDED TO LOAN::", new BN(amount))
                 const tx = await program.methods
                     .lenderFund(new BN(amount))
                     .accountsStrict({
@@ -289,12 +452,31 @@ export function useLenderFund() {
                         systemProgram: SystemProgram.programId,
                         tokenProgram: TOKEN_PROGRAM_ID,
                     })
+                    .preInstructions(instructions)
                     .rpc();
 
                 notify({ description: "Successfully funded loan!", type: "success" });
                 return tx;
-            } catch (error) {
-                notify({ description: `Failed to fund loan: ${error}`, type: "error" });
+            } catch (error: any) {
+                console.error("Funding error:", error);
+                
+                // Handle "already processed" errors gracefully
+                const errorMessage = error.message || error.toString();
+                if (errorMessage.includes("already been processed") || 
+                    errorMessage.includes("already processed") ||
+                    errorMessage.includes("duplicate")) {
+                    
+                    notify({
+                        description: "You may have already funded this loan. Refreshing your loans...",
+                        type: "info"
+                    });
+                    return { success: true };
+                }
+                
+                notify({
+                    description: "An error occurred while funding the loan. Please try again later.",
+                    type: "error"
+                });
                 throw error;
             }
         },
@@ -307,7 +489,7 @@ export function useLenderFund() {
 }
 
 export function useFinalizeFunding() {
-    const program = useLoansProgram();
+    const program = useLoansMarketplaceProgram();
     const { publicKey } = useWallet();
     const configPda = useConfigPda();
     const qc = useQueryClient();
@@ -327,9 +509,8 @@ export function useFinalizeFunding() {
                 const tx = await program.methods
                     .finalizeFunding()
                     .accountsStrict({
-                        config: configPda,
                         loan: loanPda,
-                        loanSigner: loanSignerPda,
+                        borrower: publicKey,
                     })
                     .rpc();
 
@@ -348,7 +529,7 @@ export function useFinalizeFunding() {
 }
 
 export function usePayoutToLenders() {
-    const program = useLoansProgram();
+    const program = useLoansMarketplaceProgram();
     const { publicKey } = useWallet();
     const configPda = useConfigPda();
     const qc = useQueryClient();
@@ -376,13 +557,14 @@ export function usePayoutToLenders() {
                 const tx = await program.methods
                     .payoutToLenders()
                     .accountsStrict({
-                        config: configPda,
                         lender: publicKey,
                         loan: loanPda,
-                        loanSigner: loanSignerPda,
                         lenderAta,
-                        loanEscrowAta,
                         lenderShare: lenderSharePda,
+                        usdcMint,
+                        systemProgram: SystemProgram.programId,
+                        collateralEscrowAta: loanEscrowAta,
+                        associatedTokenProgram: new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
                         tokenProgram: TOKEN_PROGRAM_ID,
                     })
                     .rpc();
@@ -401,7 +583,7 @@ export function usePayoutToLenders() {
 }
 
 export function formatCurrencyMinor(amountMinor: number) {
-    return `$${(amountMinor / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    return `$${(amountMinor / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 export function bpsToPct(aprBps: number) {

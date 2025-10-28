@@ -15,7 +15,7 @@ import { useProver } from "@anon-aadhaar/react";
 import { useUserRole } from "../../../../stores/user-store";
 import { getCreditScore } from "../../../actions/getCreditScore";
 import { useZkPassProofGen, getAttestation as getZkPassAttestation } from "../../../../hooks/use-proof/zkPass";
-import { useAttesttationRegistryProgram as getProgram } from "../../../../hooks/use-get-program";
+import { useAttestationRegistryProgram as getProgram } from "../../../../hooks/use-get-program";
 import { useReclaimProofGenPlaid, getAttestation as getReclaimAttestation } from "../../../../hooks/use-proof/reclaim";
 import { zkPassIssuerPubkey, plaidIssuerPubkey } from "../../../../lib/constants/issuers";
 import { CreateLoanForm, CreditData } from "../../../../components/borrower/CreateLoanForm";

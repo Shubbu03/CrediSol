@@ -3,13 +3,18 @@
 import { motion } from "framer-motion";
 import { TrendingUp, DollarSign, PieChart, Zap } from "lucide-react";
 import Link from "next/link";
-import { useLoansList } from "../../../hooks/use-loans";
+import { useRecentLoansList, usePortfolio, formatCurrencyMinor } from "../../../hooks/use-loans";
 import { LoanCard } from "../../../components/lender/loan-card";
 import { LoanFilters } from "../../../components/lender/filters";
 import { LoansLoader, NoLoansEmptyState } from "../../../components/shared/loader";
 import { AuthGuard } from "../../../components/shared/auth-guard";
 
 export default function LenderDashboard() {
+    const { data: portfolio } = usePortfolio();
+
+    const totalInvested = portfolio?.reduce((sum, p) => sum + p.principal, 0) || 0;
+    const totalReturns = portfolio?.reduce((sum, p) => sum + p.repaidInterest, 0) || 0;
+    const activePositions = portfolio?.length || 0;
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -31,22 +36,108 @@ export default function LenderDashboard() {
         },
     };
 
-    function LendingGrid() {
-        const { data, isLoading } = useLoansList();
+    function DashboardSummaryCard({ icon, label }: { icon: React.ReactNode; label: string }) {
+        let value = "$0";
+        let subtitle = "Start lending to earn";
+        
+        if (label === "Total Invested") {
+            value = formatCurrencyMinor(totalInvested);
+            subtitle = "Your capital deployed";
+        } else if (label === "Total Returns") {
+            value = formatCurrencyMinor(totalReturns);
+            subtitle = "Interest earned";
+        } else if (label === "Active Loans") {
+            value = activePositions.toString();
+            subtitle = activePositions > 0 ? `${activePositions} active positions` : "No active positions";
+        } else if (label === "Available") {
+            value = "$0"; // Could be wallet balance
+            subtitle = "Ready to invest";
+        }
 
         return (
             <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
-                {isLoading ? (
-                    <LoansLoader />
-                ) : !data || data.length === 0 ? (
-                    <NoLoansEmptyState />
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {data.map((loan) => (
-                            <LoanCard key={loan.id} loan={loan} />
-                        ))}
+                <div className="flex items-center gap-3 mb-2">
+                    {icon}
+                    <span className="text-sm font-medium text-foreground/70">{label}</span>
+                </div>
+                <div className="text-2xl font-bold">{value}</div>
+                <div className="text-xs text-foreground/60">{subtitle}</div>
+            </div>
+        );
+    }
+
+    function LendingGrid() {
+        const { data, isLoading } = useRecentLoansList();
+        const { data: portfolio } = usePortfolio();
+
+        // Calculate portfolio stats
+        const totalInvested = portfolio?.reduce((sum, p) => sum + p.principal, 0) || 0;
+        const totalReturns = portfolio?.reduce((sum, p) => sum + p.repaidInterest, 0) || 0;
+        const activePositions = portfolio?.length || 0;
+
+        return (
+            <>
+                <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
+                    {isLoading ? (
+                        <LoansLoader />
+                    ) : !data || data.length === 0 ? (
+                        <NoLoansEmptyState />
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {data.map((loan) => (
+                                <LoanCard key={loan.id} loan={loan} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </>
+        );
+    }
+
+    function PortfolioOverview() {
+        const { data: portfolio, isLoading } = usePortfolio();
+
+        if (isLoading || !portfolio || portfolio.length === 0) {
+            return (
+                <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
+                    <div className="text-center py-8">
+                        <PieChart className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
+                        <p className="text-foreground/60">No active positions</p>
+                        <p className="text-sm text-foreground/50">
+                            Start funding loans to build your portfolio
+                        </p>
                     </div>
-                )}
+                </div>
+            );
+        }
+
+        const totalInvested = portfolio.reduce((sum, p) => sum + p.principal, 0);
+        const totalReturns = portfolio.reduce((sum, p) => sum + p.repaidInterest, 0);
+        const recentPositions = portfolio.slice(0, 3);
+
+        return (
+            <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
+                <div className="mb-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-foreground/60">Total Portfolio Value</span>
+                        <span className="text-lg font-bold">{formatCurrencyMinor(totalInvested)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-foreground/60">Total Returns</span>
+                        <span className="text-lg font-bold text-green-500">{formatCurrencyMinor(totalReturns)}</span>
+                    </div>
+                </div>
+                <div className="space-y-2 border-t border-border/20 pt-4 mt-4">
+                    <h3 className="text-sm font-semibold mb-3">Recent Investments</h3>
+                    {recentPositions.map((position) => (
+                        <div key={position.loanId} className="flex items-center justify-between p-2 rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors">
+                            <div className="text-xs font-mono text-foreground/60">
+                                {position.loanId.slice(0, 8)}...
+                            </div>
+                            <div className="text-sm font-semibold">{formatCurrencyMinor(position.principal)}</div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
@@ -56,7 +147,7 @@ export default function LenderDashboard() {
             <div className="min-h-screen bg-background">
                 <div className="absolute inset-0 -z-10">
                     <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-trust-green/10 to-emerald-500/10 rounded-full blur-3xl" />
-                    <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/10 to-violet-500/10 rounded-full blur-3xl" />
+                    {/* <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/10 to-violet-500/10 rounded-full blur-3xl" /> */}
                 </div>
 
                 <div className="relative z-10 min-h-screen">
@@ -78,41 +169,10 @@ export default function LenderDashboard() {
                                 variants={itemVariants}
                                 className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
                             >
-                                <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <DollarSign className="w-5 h-5 text-trust-green" />
-                                        <span className="text-sm font-medium text-foreground/70">Total Invested</span>
-                                    </div>
-                                    <div className="text-2xl font-bold">$0</div>
-                                    <div className="text-xs text-foreground/60">Start lending to earn</div>
-                                </div>
-
-                                <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <TrendingUp className="w-5 h-5 text-violet-500" />
-                                        <span className="text-sm font-medium text-foreground/70">Total Returns</span>
-                                    </div>
-                                    <div className="text-2xl font-bold">$0</div>
-                                    <div className="text-xs text-foreground/60">12.4% avg APY</div>
-                                </div>
-
-                                <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <PieChart className="w-5 h-5 text-blue-500" />
-                                        <span className="text-sm font-medium text-foreground/70">Active Loans</span>
-                                    </div>
-                                    <div className="text-2xl font-bold">0</div>
-                                    <div className="text-xs text-foreground/60">No active positions</div>
-                                </div>
-
-                                <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Zap className="w-5 h-5 text-warning-amber" />
-                                        <span className="text-sm font-medium text-foreground/70">Available</span>
-                                    </div>
-                                    <div className="text-2xl font-bold">$0</div>
-                                    <div className="text-xs text-foreground/60">Ready to invest</div>
-                                </div>
+                                <DashboardSummaryCard icon={<DollarSign className="w-5 h-5 text-trust-green" />} label="Total Invested" />
+                                <DashboardSummaryCard icon={<TrendingUp className="w-5 h-5 text-violet-500" />} label="Total Returns" />
+                                <DashboardSummaryCard icon={<PieChart className="w-5 h-5 text-blue-500" />} label="Active Loans" />
+                                <DashboardSummaryCard icon={<Zap className="w-5 h-5 text-warning-amber" />} label="Available" />
                             </motion.div>
 
                             <motion.div variants={itemVariants} className="mb-8">
@@ -135,15 +195,7 @@ export default function LenderDashboard() {
                                         View Portfolio →
                                     </Link>
                                 </div>
-                                <div className="p-6 bg-surface-1 rounded-xl border border-border/30">
-                                    <div className="text-center py-8">
-                                        <PieChart className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
-                                        <p className="text-foreground/60">No active positions</p>
-                                        <p className="text-sm text-foreground/50">
-                                            Start funding loans to build your portfolio
-                                        </p>
-                                    </div>
-                                </div>
+                                <PortfolioOverview />
                             </motion.div>
                         </motion.div>
                     </div>

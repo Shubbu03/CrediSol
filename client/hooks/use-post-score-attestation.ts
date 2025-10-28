@@ -69,9 +69,7 @@ const getSecp256k1Keypair = (): { privateKey: Uint8Array; publicKey: Uint8Array 
     const publicKeyCompressed = secp256k1.publicKeyCreate(privateKey);
     const publicKey = secp256k1.publicKeyConvert(publicKeyCompressed, false);
 
-    console.log('Using secp256k1 keypair:');
-    console.log('Private key (hex):', Buffer.from(privateKey).toString('hex'));
-    console.log('Public key (hex):', Buffer.from(publicKey).toString('hex'));
+    // Using secp256k1 keypair for attestation
 
     return { privateKey, publicKey };
 };
@@ -137,10 +135,18 @@ export const postScoreAttestationTransaction = async ({
             program.programId
         );
 
-        console.log('Config PDA:', configPda.toBase58());
+        try {
+            const configAccount = await program.account.config.fetch(configPda);
+
+            if (!configAccount.secp256k1Pubkey) {
+                throw new Error('secp256k1Pubkey is not set in the config account');
+            }
+        } catch (error) {
+            console.error('Failed to fetch config account:', error);
+            throw error;
+        }
 
         const attestorKeypair = getAttestorKeypair();
-        console.log('Attestor public key:', attestorKeypair.publicKey.toBase58());
 
         const attestorWallet = {
             publicKey: attestorKeypair.publicKey,
@@ -201,7 +207,7 @@ export const postScoreAttestationTransaction = async ({
             .signers([attestorKeypair])
             .rpc({ skipPreflight: false, preflightCommitment: 'confirmed' });
 
-        console.log('Transaction signature:', signature);
+        // Transaction signature received
 
         return {
             success: true,
