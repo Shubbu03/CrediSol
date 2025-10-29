@@ -73,7 +73,11 @@ export function ChooseRoleStep() {
                 variants={itemVariants}
                 className="text-foreground/70 mb-8 leading-relaxed"
             >
-                How would you like to use zkLend? You can always change this later in your settings.
+<<<<<<< Updated upstream
+                How would you like to use CrediSol? You can always change this later in your settings.
+=======
+                How would you like to use CrediSOL? You can always change this later in your settings.
+>>>>>>> Stashed changes
             </motion.p>
 
             <motion.div
@@ -177,7 +181,11 @@ export function ChooseRoleStep() {
                 variants={itemVariants}
                 className="mt-8 p-4 bg-surface-1 rounded-lg border border-border/30"
             >
-                <div className="text-sm font-medium mb-2">Why Choose zkLend?</div>
+<<<<<<< Updated upstream
+                <div className="text-sm font-medium mb-2">Why Choose CrediSol?</div>
+=======
+                <div className="text-sm font-medium mb-2">Why Choose CrediSOL?</div>
+>>>>>>> Stashed changes
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-foreground/60">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-trust-green rounded-full"></div>

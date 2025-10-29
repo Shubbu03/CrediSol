@@ -38,7 +38,11 @@ export const useUserStore = create<UserState>()(
             },
         }),
         {
-            name: 'zklend-user',
+<<<<<<< Updated upstream
+            name: 'CrediSol-user',
+=======
+            name: 'CrediSOL-user',
+>>>>>>> Stashed changes
             partialize: (state) => ({
                 role: state.role,
                 onboarded: state.onboarded

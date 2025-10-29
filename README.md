@@ -1,8 +1,8 @@
-# zkLend
+# CrediSol
 
 > **Revolutionary peer-to-peer lending with zero-knowledge credit attestations on Solana**
 
-zkLend is a cutting-edge DeFi protocol that enables undercollateralized lending using zero-knowledge proofs for privacy-preserving credit scoring. Built on Solana for lightning-fast transactions and minimal fees, zkLend eliminates the need for excessive collateral while maintaining complete user privacy.
+CrediSol is a cutting-edge DeFi protocol that enables undercollateralized lending using zero-knowledge proofs for privacy-preserving credit scoring. Built on Solana for lightning-fast transactions and minimal fees, CrediSol eliminates the need for excessive collateral while maintaining complete user privacy.
 
 ## 🚀 Key Features
 
@@ -95,7 +95,7 @@ zkLend is a cutting-edge DeFi protocol that enables undercollateralized lending 
 - `Hero`: Dynamic stats and live activity feed
 - `ProblemSolution`: Interactive comparison slider
 - `HowItWorks`: Step-by-step process visualization
-- `WhyZkLend`: Technical specifications and features
+- `WhyCrediSol`: Technical specifications and features
 - `Features`: Core value propositions
 
 **Application Pages**:
@@ -200,7 +200,7 @@ zk-lend/
 ## 🌟 Key Innovations
 
 ### 1. **Privacy-Preserving Credit Scoring**
-Traditional lending requires exposing personal financial data to credit bureaus. zkLend uses zero-knowledge proofs to prove creditworthiness without revealing any sensitive information.
+Traditional lending requires exposing personal financial data to credit bureaus. CrediSol uses zero-knowledge proofs to prove creditworthiness without revealing any sensitive information.
 
 ### 2. **Undercollateralized Lending**
 Reduces collateral requirements from 150%+ to just 5-20% while maintaining security through ZK-based risk assessment.
@@ -248,10 +248,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <!-- ## 🔗 Links
 
-- **Website**: [zkLend.app](https://zklend.app)
-- **Documentation**: [docs.zklend.app](https://docs.zklend.app)
-- **Discord**: [Join our community](https://discord.gg/zklend)
-- **Twitter**: [@zkLend](https://twitter.com/zklend) -->
+- **Website**: [CrediSol.app](https://CrediSol.app)
+- **Documentation**: [docs.CrediSol.app](https://docs.CrediSol.app)
+- **Discord**: [Join our community](https://discord.gg/CrediSol)
+- **Twitter**: [@CrediSol](https://twitter.com/CrediSol) -->
 
 ## 👥 Contributors
 
@@ -271,4 +271,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ for the future of decentralized finance**
 
-*zkLend - Where privacy meets lending*
+*CrediSol - Where privacy meets lending*

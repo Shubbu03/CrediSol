@@ -98,25 +98,41 @@ export default function TechnicalDifferentiators() {
     const comparisons = [
         {
             metric: "Transaction Speed",
-            zkLend: "0.4s",
+<<<<<<< Updated upstream
+            CrediSol: "0.4s",
+=======
+            CrediSOL: "0.4s",
+>>>>>>> Stashed changes
             traditional: "3-5 days",
             improvement: "99.9% faster"
         },
         {
             metric: "Privacy Level",
-            zkLend: "100%",
+<<<<<<< Updated upstream
+            CrediSol: "100%",
+=======
+            CrediSOL: "100%",
+>>>>>>> Stashed changes
             traditional: "0%",
             improvement: "Complete privacy"
         },
         {
             metric: "Collateral Required",
-            zkLend: "5-20%",
+<<<<<<< Updated upstream
+            CrediSol: "5-20%",
+=======
+            CrediSOL: "5-20%",
+>>>>>>> Stashed changes
             traditional: "150%+",
             improvement: "95% less"
         },
         {
             metric: "Transaction Cost",
-            zkLend: "< $0.001",
+<<<<<<< Updated upstream
+            CrediSol: "< $0.001",
+=======
+            CrediSOL: "< $0.001",
+>>>>>>> Stashed changes
             traditional: "$50-200",
             improvement: "99.9% cheaper"
         }
@@ -176,8 +192,8 @@ export default function TechnicalDifferentiators() {
                                 variants={itemVariants}
                                 onClick={() => setActiveFeature(index)}
                                 className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 ${activeFeature === index
-                                        ? "bg-violet-600 text-white shadow-lg"
-                                        : "bg-muted/50 text-foreground/70 hover:bg-muted/80 hover:text-foreground"
+                                    ? "bg-violet-600 text-white shadow-lg"
+                                    : "bg-muted/50 text-foreground/70 hover:bg-muted/80 hover:text-foreground"
                                     }`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -296,7 +312,11 @@ export default function TechnicalDifferentiators() {
                                         Traditional: {comparison.traditional}
                                     </div>
                                     <div className="bg-emerald-500/10 text-emerald-600 px-3 py-2 rounded-lg text-sm font-semibold">
-                                        zkLend: {comparison.zkLend}
+<<<<<<< Updated upstream
+                                        CrediSol: {comparison.CrediSol}
+=======
+                                        CrediSOL: {comparison.CrediSOL}
+>>>>>>> Stashed changes
                                     </div>
                                     <div className="text-xs text-emerald-500 font-medium">
                                         {comparison.improvement}
