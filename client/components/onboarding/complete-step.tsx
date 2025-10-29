@@ -78,7 +78,7 @@ export function CompleteStep() {
                 variants={itemVariants}
                 className="text-foreground/70 mb-8 leading-relaxed"
             >
-                Welcome to zkLend! You're now ready to {role === "borrower" ? "start borrowing" : "start lending"} with zero-knowledge privacy.
+                Welcome to CrediSol! You're now ready to {role === "borrower" ? "start borrowing" : "start lending"} with zero-knowledge privacy.
             </motion.p>
 
             <motion.div

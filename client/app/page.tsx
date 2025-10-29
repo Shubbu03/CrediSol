@@ -1,7 +1,7 @@
 import Hero from "../components/landing/hero";
 import ProblemSolution from "../components/landing/problem-solution";
 import HowItWorks from "../components/landing/how-it-works";
-import WhyZkLend from "../components/landing/why-zklend";
+import WhyCrediSol from "../components/landing/why-zklend";
 import Footer from "../components/landing/footer";
 
 export default function Home() {
@@ -11,7 +11,7 @@ export default function Home() {
         <Hero />
         <ProblemSolution />
         <HowItWorks />
-        <WhyZkLend />
+        <WhyCrediSol />
       </main>
       <Footer />
     </>

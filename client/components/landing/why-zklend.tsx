@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-export default function WhyZkLend() {
+export default function WhyCrediSol() {
   const [activeTab, setActiveTab] = useState(0);
   const [liveMetrics, setLiveMetrics] = useState({
     tps: 0,
@@ -192,7 +192,7 @@ export default function WhyZkLend() {
             <span className="text-sm font-medium">Built to Last</span>
           </motion.div>
           <h2 className="text-heading-1 mb-4">
-            Why <span className="gradient-text">zkLend</span> Works
+            Why <span className="gradient-text">CrediSol</span> Works
           </h2>
           <p className="text-body-large text-foreground/60 max-w-2xl mx-auto">
             Cutting-edge technology meets financial innovation. Here's what makes us different.
@@ -244,11 +244,10 @@ export default function WhyZkLend() {
                 key={index}
                 variants={itemVariants}
                 onClick={() => setActiveTab(index)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 ${
-                  activeTab === index
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 ${activeTab === index
                     ? "bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg"
                     : "bg-surface-1 text-foreground/70 hover:bg-surface-2 hover:text-foreground"
-                }`}
+                  }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >

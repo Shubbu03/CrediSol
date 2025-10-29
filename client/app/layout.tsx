@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "zkLend",
+  title: "CrediSol",
   description: "Peer-to-peer undercollateralized lending using ZK credit attestations",
 };
 

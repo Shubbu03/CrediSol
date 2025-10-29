@@ -170,7 +170,7 @@ export default function Apply() {
                 <span className="font-bold text-sm">zk</span>
               </div>
               <span className="text-lg font-semibold text-foreground">
-                zkLend - Apply
+                CrediSol - Apply
               </span>
             </div>
             <div className="flex items-center gap-4">

@@ -1,6 +1,6 @@
-# Contributing to zkLend
+# Contributing to CrediSol
 
-Thank you for your interest in contributing to zkLend! We welcome contributions from the community and appreciate your help in making this project better.
+Thank you for your interest in contributing to CrediSol! We welcome contributions from the community and appreciate your help in making this project better.
 
 ## 🤝 How to Contribute
 
@@ -256,8 +256,8 @@ For new features:
 
 ## 📄 License
 
-By contributing to zkLend, you agree that your contributions will be licensed under the MIT License.
+By contributing to CrediSol, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
-Thank you for contributing to zkLend! 🚀
+Thank you for contributing to CrediSol! 🚀

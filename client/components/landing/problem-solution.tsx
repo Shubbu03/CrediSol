@@ -123,7 +123,7 @@ export default function ProblemSolution() {
             From Broken to <span className="gradient-text">Revolutionary</span>
           </h2>
           <p className="text-lg text-foreground/60 max-w-2xl mx-auto">
-            Traditional lending is fundamentally flawed. zkLend fixes it with cutting-edge technology.
+            Traditional lending is fundamentally flawed. CrediSol fixes it with cutting-edge technology.
           </p>
         </motion.div>
 
@@ -192,7 +192,7 @@ export default function ProblemSolution() {
                       <CheckCircle className="w-10 h-10 text-trust-green" />
                     </div>
                     <h3 className="text-2xl font-bold text-trust-green mb-4">
-                      zkLend Solution
+                      CrediSol Solution
                     </h3>
                     <div className="space-y-3">
                       {solutions.map((solution, index) => {

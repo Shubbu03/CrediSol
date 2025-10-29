@@ -69,7 +69,7 @@ export function ConnectWalletStep() {
             >
                 {connected
                     ? "Great! Your wallet is connected and ready to use."
-                    : "Connect your Solana wallet to get started with zkLend. We support Phantom, Solflare, and other popular wallets."}
+                    : "Connect your Solana wallet to get started with CrediSol. We support Phantom, Solflare, and other popular wallets."}
             </motion.p>
 
             <motion.div

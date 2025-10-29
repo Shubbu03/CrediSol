@@ -38,7 +38,7 @@ export const useUserStore = create<UserState>()(
             },
         }),
         {
-            name: 'zklend-user',
+            name: 'CrediSol-user',
             partialize: (state) => ({
                 role: state.role,
                 onboarded: state.onboarded

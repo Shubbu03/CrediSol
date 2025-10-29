@@ -44,7 +44,7 @@ export function Header() {
                         <span className="text-white font-bold text-sm">zk</span>
                     </div>
                     <span className="hidden sm:inline text-lg font-semibold bg-gradient-to-r from-violet-600 to-blue-600 dark:from-violet-400 dark:to-blue-400 bg-clip-text text-transparent">
-                        zkLend
+                        CrediSol
                     </span>
                 </motion.a>
 

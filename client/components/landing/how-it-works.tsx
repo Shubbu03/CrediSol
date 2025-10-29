@@ -25,7 +25,7 @@ export default function HowItWorks() {
             number: 1,
             icon: Wallet,
             title: "Connect Wallet",
-            description: "Link your Solana wallet to access zkLend",
+            description: "Link your Solana wallet to access CrediSol",
             details: [
                 "Connect Phantom, Solflare, or other Solana wallets",
                 "No KYC or personal information required",
