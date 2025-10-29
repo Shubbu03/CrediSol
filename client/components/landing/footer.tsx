@@ -7,7 +7,7 @@ export default function Footer() {
     const links = [
         { label: "GitHub", href: "https://github.com/zklend", icon: Github },
         { label: "Discord", href: "https://discord.gg/zklend", icon: MessageCircle },
-        { label: "X", href: "https://twitter.com/zklend", icon: X },
+        { label: "X", href: "https://x.com/zkmatrix", icon: X },
     ];
 
     const features = [
@@ -31,7 +31,7 @@ export default function Footer() {
                             >
                                 <span className="text-white font-bold text-sm">zk</span>
                             </motion.div>
-                            <span className="text-lg font-bold">zkLend</span>
+                            <span className="text-lg font-bold">CrediSol</span>
                         </div>
                         <p className="text-sm text-foreground/60 mb-4">
                             The future of DeFi lending. Access liquidity without barriers, powered by zero-knowledge proofs.
@@ -102,7 +102,7 @@ export default function Footer() {
                 <div className="border-t border-border/20 pt-8">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-6 text-xs text-foreground/40">
-                            <span>© 2025 zkLend Labs. All rights reserved.</span>
+                            <span>© 2025 CrediSol Labs. All rights reserved.</span>
                             <a href="/privacy" className="hover:text-foreground/60 transition-colors">Privacy</a>
                             <a href="/terms" className="hover:text-foreground/60 transition-colors">Terms</a>
                         </div>
