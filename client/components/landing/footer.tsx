@@ -31,7 +31,11 @@ export default function Footer() {
                             >
                                 <span className="text-white font-bold text-sm">zk</span>
                             </motion.div>
+<<<<<<< Updated upstream
                             <span className="text-lg font-bold">CrediSol</span>
+=======
+                            <span className="text-lg font-bold">CrediSOL</span>
+>>>>>>> Stashed changes
                         </div>
                         <p className="text-sm text-foreground/60 mb-4">
                             The future of DeFi lending. Access liquidity without barriers, powered by zero-knowledge proofs.
@@ -102,7 +106,11 @@ export default function Footer() {
                 <div className="border-t border-border/20 pt-8">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-6 text-xs text-foreground/40">
+<<<<<<< Updated upstream
                             <span>© 2025 CrediSol Labs. All rights reserved.</span>
+=======
+                            <span>© 2025 zkMatrix Labs. All rights reserved.</span>
+>>>>>>> Stashed changes
                             <a href="/privacy" className="hover:text-foreground/60 transition-colors">Privacy</a>
                             <a href="/terms" className="hover:text-foreground/60 transition-colors">Terms</a>
                         </div>

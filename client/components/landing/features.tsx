@@ -55,7 +55,11 @@ export default function Features() {
                     className="text-center mb-16"
                 >
                     <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+<<<<<<< Updated upstream
                         Why CrediSol?
+=======
+                        Why CrediSOL?
+>>>>>>> Stashed changes
                     </h2>
                     <p className="text-lg text-foreground/60 max-w-2xl mx-auto">
                         A new standard for lending. No collateral requirements, no gatekeepers, just smart contracts and zero-knowledge magic.

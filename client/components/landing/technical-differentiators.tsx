@@ -98,25 +98,41 @@ export default function TechnicalDifferentiators() {
     const comparisons = [
         {
             metric: "Transaction Speed",
+<<<<<<< Updated upstream
             CrediSol: "0.4s",
+=======
+            CrediSOL: "0.4s",
+>>>>>>> Stashed changes
             traditional: "3-5 days",
             improvement: "99.9% faster"
         },
         {
             metric: "Privacy Level",
+<<<<<<< Updated upstream
             CrediSol: "100%",
+=======
+            CrediSOL: "100%",
+>>>>>>> Stashed changes
             traditional: "0%",
             improvement: "Complete privacy"
         },
         {
             metric: "Collateral Required",
+<<<<<<< Updated upstream
             CrediSol: "5-20%",
+=======
+            CrediSOL: "5-20%",
+>>>>>>> Stashed changes
             traditional: "150%+",
             improvement: "95% less"
         },
         {
             metric: "Transaction Cost",
+<<<<<<< Updated upstream
             CrediSol: "< $0.001",
+=======
+            CrediSOL: "< $0.001",
+>>>>>>> Stashed changes
             traditional: "$50-200",
             improvement: "99.9% cheaper"
         }
@@ -296,7 +312,11 @@ export default function TechnicalDifferentiators() {
                                         Traditional: {comparison.traditional}
                                     </div>
                                     <div className="bg-emerald-500/10 text-emerald-600 px-3 py-2 rounded-lg text-sm font-semibold">
+<<<<<<< Updated upstream
                                         CrediSol: {comparison.CrediSol}
+=======
+                                        CrediSOL: {comparison.CrediSOL}
+>>>>>>> Stashed changes
                                     </div>
                                     <div className="text-xs text-emerald-500 font-medium">
                                         {comparison.improvement}

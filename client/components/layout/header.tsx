@@ -6,6 +6,7 @@ import { Moon, Sun } from "lucide-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 
 
 export function Header() {
@@ -40,11 +41,18 @@ export function Header() {
                     transition={{ delay: 0.1, duration: 0.5 }}
                     className="flex items-center gap-2"
                 >
-                    <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">zk</span>
-                    </div>
+                    <Image 
+                    src={"/logo.png"}
+                    alt="logo"
+                    width={60}
+                    height={60}
+                    />
                     <span className="hidden sm:inline text-lg font-semibold bg-gradient-to-r from-violet-600 to-blue-600 dark:from-violet-400 dark:to-blue-400 bg-clip-text text-transparent">
+<<<<<<< Updated upstream
                         CrediSol
+=======
+                        CrediSOL
+>>>>>>> Stashed changes
                     </span>
                 </motion.a>
 
