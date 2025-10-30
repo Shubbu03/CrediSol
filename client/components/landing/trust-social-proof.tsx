@@ -113,11 +113,7 @@ export default function TrustSocialProof() {
                         Trusted by Thousands
                     </h2>
                     <p className="text-lg text-foreground/60 max-w-2xl mx-auto">
-<<<<<<< Updated upstream
-                        Real users, real results. See why CrediSol is the preferred choice for DeFi lending.
-=======
                         Real users, real results. See why CrediSOL is the preferred choice for DeFi lending.
->>>>>>> Stashed changes
                     </p>
                 </motion.div>
 

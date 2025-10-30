@@ -25,11 +25,7 @@ export default function HowItWorks() {
             number: 1,
             icon: Wallet,
             title: "Connect Wallet",
-<<<<<<< Updated upstream
-            description: "Link your Solana wallet to access CrediSol",
-=======
             description: "Link your Solana wallet to access CrediSOL",
->>>>>>> Stashed changes
             details: [
                 "Connect Phantom, Solflare, or other Solana wallets",
                 "No KYC or personal information required",

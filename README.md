@@ -1,8 +1,8 @@
-# CrediSol
+# CrediSOL
 
 > **Revolutionary peer-to-peer lending with zero-knowledge credit attestations on Solana**
 
-CrediSol is a cutting-edge DeFi protocol that enables undercollateralized lending using zero-knowledge proofs for privacy-preserving credit scoring. Built on Solana for lightning-fast transactions and minimal fees, CrediSol eliminates the need for excessive collateral while maintaining complete user privacy.
+CrediSOL is a cutting-edge DeFi protocol that enables undercollateralized lending using zero-knowledge proofs for privacy-preserving credit scoring. Built on Solana for lightning-fast transactions and minimal fees, CrediSOL eliminates the need for excessive collateral while maintaining complete user privacy.
 
 ## 🚀 Key Features
 
@@ -12,7 +12,7 @@ CrediSol is a cutting-edge DeFi protocol that enables undercollateralized lendin
 - **No Central Database**: No personal information stored on-chain
 - **Mathematically Guaranteed Privacy**: Cryptographically secure
 
-### ⚡ **Solana Speed & Efficiency**
+### ⚡ **Solanana Speed & Efficiency**
 - **65,000+ TPS**: Lightning-fast transaction processing
 - **< 400ms Finality**: Sub-second transaction confirmation
 - **< $0.001 Cost**: Micro-fee structure for all operations
